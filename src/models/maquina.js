@@ -90,6 +90,21 @@ module.exports = (sequelize) => {
       foreignKey: "maquina_id",
       as: "reservas",
     });
+
+    Maquina.hasMany(models.Mantenimiento, {
+      foreignKey: "maquina_id",
+      as: "mantenimientos",
+    });
+
+    Maquina.belongsTo(models.Sucursal, {
+      foreignKey: "sucursal_id",
+      as: "sucursal",
+    });
+
+    Maquina.belongsTo(models.PoliticaCancelacion, {
+      foreignKey: "politica_cancelacion_id",
+      as: "politicaCancelacion",
+    });
   };
 
   return Maquina;
