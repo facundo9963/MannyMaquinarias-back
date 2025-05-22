@@ -1,15 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { Maquina } = require("../models/maquina");
+const { listarMaquinas } = require("../controllers/maquinaController");
 
-// Obtener todas las máquinas
-router.get("/", async (req, res) => {
-  try {
-    const maquinas = await Maquina.findAll();
-    res.json(maquinas);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// GET /maquinas
+router.get("/", listarMaquinas);
 
 module.exports = router;
