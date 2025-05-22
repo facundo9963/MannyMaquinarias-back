@@ -16,6 +16,7 @@ router.get("/", (req, res) => {
     },
   });
 });
+app.use('/maquinas', maquinasRouter);
 
 // Monta los otros routers
 router.use("/maquinas", maquinasRouter);
