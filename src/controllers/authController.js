@@ -1,5 +1,6 @@
 const { Usuario, Rol } = require("../../db");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const registerUser = async (req, res) => {
   const { dni, nombreUsuario, nombre, apellido, password, direccion, edad } =
@@ -56,4 +57,45 @@ const registerUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser };
+const loginUser = async (req, res) => {
+  const { nombreUsuario, password } = req.body;
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!nombreUsuario || !password) {
+    return res
+      .status(400)
+      .json({ error: "Nombre de usuario y contraseña requeridos" });
+  }
+
+  try {
+    const usuario = await Usuario.findOne({
+      where: { nombreUsuario },
+      include: ["rol"],
+    });
+
+    if (!usuario) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
+    const contraseñaValida = await bcrypt.compare(password, usuario.password);
+    if (!contraseñaValida) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        rol_id: usuario.rol_id,
+        nombre: usuario.nombre,
+        nombreUsuario: usuario.nombreUsuario,
+      },
+      JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    return res.json({ token });
+  } catch (error) {
+    console.error("Error en login:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+module.exports = { registerUser, loginUser };
