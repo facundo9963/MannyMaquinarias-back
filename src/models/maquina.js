@@ -40,6 +40,19 @@ module.exports = (sequelize) => {
           },
         },
       },
+      categoria: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            msg: "La categoría no puede estar vacía",
+          },
+          len: {
+            args: [2, 50],
+            msg: "La categoría debe tener entre 2 y 50 caracteres",
+          },
+        },
+      },
       estado: {
         type: DataTypes.ENUM(
           "disponible",
@@ -80,6 +93,9 @@ module.exports = (sequelize) => {
         },
         {
           fields: ["marca"], // índice para búsquedas por marca
+        },
+        {
+          fields: ["categoria"], // nuevo índice para búsquedas por categoría
         },
       ],
     }

@@ -9,6 +9,7 @@ const createUser = async (req, res) => {
     nombre,
     apellido,
     password,
+    email,
     direccion,
     edad,
     rol, // opcional para trabajador
@@ -16,9 +17,10 @@ const createUser = async (req, res) => {
 
   try {
     // Validaciones básicas
-    const [dniExistente, usuarioExistente] = await Promise.all([
+    const [dniExistente, usuarioExistente, emailExistente] = await Promise.all([
       Usuario.findOne({ where: { dni } }),
       Usuario.findOne({ where: { nombreUsuario } }),
+      Usuario.findOne({ where: { email } }),
     ]);
 
     if (dniExistente) {
@@ -29,6 +31,10 @@ const createUser = async (req, res) => {
       return res
         .status(400)
         .json({ error: "El nombre de usuario ya está en uso." });
+    }
+
+    if (emailExistente) {
+      return res.status(400).json({ error: "El email ya está registrado." });
     }
 
     // Verificar rol solicitante
@@ -64,6 +70,7 @@ const createUser = async (req, res) => {
       nombre,
       apellido,
       password: hashedPassword,
+      email, // Nuevo campo añadido
       direccion,
       edad,
       rol_id: rolDB.id,
@@ -74,6 +81,7 @@ const createUser = async (req, res) => {
       usuario: {
         id: nuevoUsuario.id,
         nombreUsuario: nuevoUsuario.nombreUsuario,
+        email: nuevoUsuario.email, // Incluimos el email en la respuesta
         rol: rolDB.nombre,
       },
     });

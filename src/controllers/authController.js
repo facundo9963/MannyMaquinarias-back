@@ -3,14 +3,23 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const registerUser = async (req, res) => {
-  const { dni, nombreUsuario, nombre, apellido, password, direccion, edad } =
-    req.body;
+  const {
+    dni,
+    nombreUsuario,
+    nombre,
+    apellido,
+    password,
+    email,
+    direccion,
+    edad,
+  } = req.body;
 
   try {
     // Verificaciones de unicidad
-    const [dniExistente, usuarioExistente] = await Promise.all([
+    const [dniExistente, usuarioExistente, emailExistente] = await Promise.all([
       Usuario.findOne({ where: { dni } }),
       Usuario.findOne({ where: { nombreUsuario } }),
+      Usuario.findOne({ where: { email } }),
     ]);
 
     if (dniExistente) {
@@ -21,6 +30,10 @@ const registerUser = async (req, res) => {
       return res
         .status(400)
         .json({ error: "El nombre de usuario ya está en uso." });
+    }
+
+    if (emailExistente) {
+      return res.status(400).json({ error: "El email ya está registrado." });
     }
 
     // Obtener el rol cliente
@@ -38,6 +51,7 @@ const registerUser = async (req, res) => {
       nombre,
       apellido,
       password: hashedPassword,
+      email, // Añadido el campo email
       direccion,
       edad,
       rol_id: rolCliente.id,
@@ -48,6 +62,7 @@ const registerUser = async (req, res) => {
       usuario: {
         id: nuevoUsuario.id,
         nombreUsuario: nuevoUsuario.nombreUsuario,
+        email: nuevoUsuario.email, // Incluimos el email en la respuesta
       },
     });
   } catch (err) {
@@ -58,17 +73,16 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { nombreUsuario, password } = req.body;
+  const { email, password } = req.body; // Ahora permitimos login con email
   const JWT_SECRET = process.env.JWT_SECRET;
-  if (!nombreUsuario || !password) {
-    return res
-      .status(400)
-      .json({ error: "Nombre de usuario y contraseña requeridos" });
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email y contraseña requeridos" });
   }
 
   try {
     const usuario = await Usuario.findOne({
-      where: { nombreUsuario },
+      where: { email }, // Buscamos por email ahora
       include: ["rol"],
     });
 
@@ -87,15 +101,25 @@ const loginUser = async (req, res) => {
         rol_id: usuario.rol_id,
         nombre: usuario.nombre,
         nombreUsuario: usuario.nombreUsuario,
+        email: usuario.email, // Incluimos el email en el token
       },
       JWT_SECRET,
       { expiresIn: "2h" }
     );
 
-    return res.json({ token });
+    return res.json({
+      token,
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        nombreUsuario: usuario.nombreUsuario,
+      },
+    });
   } catch (error) {
     console.error("Error en login:", error);
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+
 module.exports = { registerUser, loginUser };
