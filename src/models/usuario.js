@@ -68,6 +68,10 @@ module.exports = (sequelize) => {
           },
         },
       },
+      eliminado: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
       password: {
         type: DataTypes.STRING,
         allowNull: false,

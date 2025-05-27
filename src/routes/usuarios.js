@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { addUser } = require("../controllers/usuarioController");
-const { authMiddleware } = require("../middlewares/authMiddleware");
+const { eliminarUsuario } = require("../controllers/usuarioController");
+const verificarToken = require("../middlewares/verificarToken");
 
-router.post("/usuarios", authMiddleware, addUser);
+router.delete("/eliminar", verificarToken, eliminarUsuario);
 
 module.exports = router;

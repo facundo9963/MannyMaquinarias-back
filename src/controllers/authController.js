@@ -15,7 +15,6 @@ const registerUser = async (req, res) => {
   } = req.body;
 
   try {
-    // Verificaciones de unicidad
     const [dniExistente, usuarioExistente, emailExistente] = await Promise.all([
       Usuario.findOne({ where: { dni } }),
       Usuario.findOne({ where: { nombreUsuario } }),
@@ -36,7 +35,6 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ error: "El email ya está registrado." });
     }
 
-    // Obtener el rol cliente
     const rolCliente = await Rol.findOne({ where: { nombre: "cliente" } });
 
     if (!rolCliente) {
@@ -51,7 +49,7 @@ const registerUser = async (req, res) => {
       nombre,
       apellido,
       password: hashedPassword,
-      email, // Añadido el campo email
+      email,
       direccion,
       edad,
       rol_id: rolCliente.id,
@@ -62,7 +60,7 @@ const registerUser = async (req, res) => {
       usuario: {
         id: nuevoUsuario.id,
         nombreUsuario: nuevoUsuario.nombreUsuario,
-        email: nuevoUsuario.email, // Incluimos el email en la respuesta
+        email: nuevoUsuario.email,
       },
     });
   } catch (err) {
@@ -73,7 +71,7 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { email, password } = req.body; // Ahora permitimos login con email
+  const { email, password } = req.body;
   const JWT_SECRET = process.env.JWT_SECRET;
 
   if (!email || !password) {
@@ -82,7 +80,10 @@ const loginUser = async (req, res) => {
 
   try {
     const usuario = await Usuario.findOne({
-      where: { email }, // Buscamos por email ahora
+      where: {
+        email,
+        eliminado: false,
+      },
       include: ["rol"],
     });
 
@@ -101,7 +102,7 @@ const loginUser = async (req, res) => {
         rol_id: usuario.rol_id,
         nombre: usuario.nombre,
         nombreUsuario: usuario.nombreUsuario,
-        email: usuario.email, // Incluimos el email en el token
+        email: usuario.email,
       },
       JWT_SECRET,
       { expiresIn: "2h" }
