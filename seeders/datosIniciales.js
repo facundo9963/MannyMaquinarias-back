@@ -1,10 +1,11 @@
 // seeders/20240601000000-all-seeds.js
 "use strict";
+const bcrypt = require("bcrypt");
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const now = new Date();
-
+    const hashedPassword = await bcrypt.hash("contra", 10);
     // 1. Crear Roles primero
     const roles = await queryInterface.bulkInsert(
       "roles",
@@ -158,7 +159,7 @@ module.exports = {
           email: "admin@gmail.com",
           nombre: "Administrador",
           apellido: "Sistema",
-          password: "$2b$10$EXAMPLEHASHEDPASSWORD",
+          password: hashedPassword,
           direccion: "Calle Admin 123",
           edad: 30,
           rol_id: roles[0].id,
@@ -171,7 +172,7 @@ module.exports = {
           email: "Juan@gmail.com",
           nombre: "Juan",
           apellido: "Perez",
-          password: "$2b$10$EXAMPLEHASHEDPASSWORD",
+          password: hashedPassword,
           direccion: "Calle Trabajador 456",
           edad: 28,
           rol_id: roles[1].id,
@@ -184,7 +185,7 @@ module.exports = {
           email: "Maria@gmail.com",
           nombre: "Maria",
           apellido: "Gomez",
-          password: "$2b$10$EXAMPLEHASHEDPASSWORD",
+          password: hashedPassword,
           direccion: "Avenida Cliente 789",
           edad: 35,
           rol_id: roles[2].id,
