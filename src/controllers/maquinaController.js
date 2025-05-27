@@ -6,9 +6,7 @@ const {
   PoliticaCancelacion,
 } = require("../../db");
 
-const maquinasController = {
-
-  listarMaquinas: async (req, res) => {
+const  listarMaquinas = async (req, res) => {
     try {
       const maquinas = await Maquina.findAll({
         include: [
@@ -24,31 +22,31 @@ const maquinasController = {
       console.error("Error al listar máquinas con relaciones:", error);
       res.status(500).json({ message: "Error al obtener las máquinas" });
     }
-  },
+}
 
-    agregarMaquina: async (req, res) => {
-        try {
-            const nuevaMaquina = await Maquina.create(req.body);
-            res.status(201).json(nuevaMaquina);
-        } catch (error) {
-            res.status(400).json({ error: error.message });
-        }
-    },
-
-    eliminarMaquina: async (req, res) => {
-        try {
-            const { id } = req.params;
-            const maquina = await Maquina.findByPk(id);
-            
-            if (!maquina) {
-                return res.status(404).json({ error: 'Máquina no encontrada' });
-            }
-            
-            await maquina.destroy();
-            res.status(204).end();
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+const agregarMaquina = async (req, res) => {
+    try {
+        const nuevaMaquina = await Maquina.create(req.body);
+        res.status(201).json(nuevaMaquina);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 }
-module.exports = maquinasController;
+
+const eliminarMaquina = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const maquina = await Maquina.findByPk(id);
+        
+        if (!maquina) {
+            return res.status(404).json({ error: 'Máquina no encontrada' });
+        }
+        
+        await maquina.destroy();
+        res.status(204).end();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = {listarMaquinas, agregarMaquina, eliminarMaquina};
