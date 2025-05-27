@@ -7,6 +7,6 @@ router.get("/", maquinasController.listarMaquinas);
 
 router.post('/add', maquinasController.agregarMaquina);
 
-router.delete('/delete', maquinasController.eliminarMaquina);
+router.delete('/delete/:id', maquinasController.eliminarMaquina);
 
 module.exports = router;

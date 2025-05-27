@@ -179,21 +179,70 @@ const agregarMaquina = async (req, res) => {
 }
 
 const eliminarMaquina = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const maquina = await Maquina.findByPk(id);
-        
-        if (!maquina) {
-            return res.status(404).json({ error: 'Máquina no encontrada' });
-        }
-        if (maquina.reservas.length > 0) {
-            return res.status(400).json({ error: 'No se puede eliminar una máquina con reservas activas' });
-        }
-        await maquina.destroy();
-        res.status(204).end();
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: "ID de máquina no válido" });
     }
-}
+
+    const maquina = await Maquina.findByPk(id);
+
+    if (!maquina) {
+      return res.status(404).json({ 
+        error: "Máquina no encontrada",
+        detalles: `No existe una máquina con el ID ${id}`
+      });
+    }
+
+    if (maquina.eliminado) {
+      return res.status(400).json({ 
+        error: "La máquina ya está eliminada",
+        detalles: `La máquina con ID ${id} ya fue marcada como eliminada anteriormente`
+      });
+    }
+
+    // Verificar reservas pendientes (opcional)
+    const reservasPendientes = await Reserva.findAll({
+      where: {
+        maquina_id: id,
+        fecha_fin: { [Op.gte]: new Date() },
+      }
+    });
+
+    if (reservasPendientes.length > 0) {
+      return res.status(409).json({
+        error: "No se puede eliminar la máquina",
+        detalles: "Tiene reservas pendientes activas",
+        reservas: reservasPendientes.map(r => ({
+          id: r.id,
+          fecha_inicio: r.fecha_inicio,
+          fecha_fin: r.fecha_fin,
+        }))
+      });
+    }
+
+    // Borrado lógico
+    await maquina.update({ eliminado: true, fecha_eliminacion: new Date() });
+
+    return res.status(200).json({
+      success: true,
+      message: "Máquina eliminada correctamente",
+      data: {
+        id: maquina.id,
+        nombre: maquina.nombre,
+        eliminado: true,
+        deletedAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error("Error en eliminarMaquina:", error);
+    return res.status(500).json({ 
+      error: "Error interno del servidor",
+      detalles: error.message 
+    });
+  }
+};
 
 module.exports = {listarMaquinas, agregarMaquina, eliminarMaquina};
