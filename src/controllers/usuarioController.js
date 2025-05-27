@@ -1,24 +1,26 @@
-const { Usuario, Rol } = require("../../db");
+const { Usuario, Rol, Reserva } = require("../../db");
 const bcrypt = require("bcrypt");
+const { Op } = require("sequelize");
 
 const createUser = async (req, res) => {
-  const usuarioLogueado = req.usuarioLogueado; // inyectado por middleware de autenticación
+  const usuarioLogueado = req.usuarioLogueado;
   const {
     dni,
     nombreUsuario,
     nombre,
     apellido,
     password,
+    email,
     direccion,
     edad,
-    rol, // opcional para trabajador
+    rol,
   } = req.body;
 
   try {
-    // Validaciones básicas
-    const [dniExistente, usuarioExistente] = await Promise.all([
+    const [dniExistente, usuarioExistente, emailExistente] = await Promise.all([
       Usuario.findOne({ where: { dni } }),
       Usuario.findOne({ where: { nombreUsuario } }),
+      Usuario.findOne({ where: { email } }),
     ]);
 
     if (dniExistente) {
@@ -31,7 +33,10 @@ const createUser = async (req, res) => {
         .json({ error: "El nombre de usuario ya está en uso." });
     }
 
-    // Verificar rol solicitante
+    if (emailExistente) {
+      return res.status(400).json({ error: "El email ya está registrado." });
+    }
+
     if (
       !usuarioLogueado ||
       !usuarioLogueado.rol ||
@@ -64,6 +69,7 @@ const createUser = async (req, res) => {
       nombre,
       apellido,
       password: hashedPassword,
+      email,
       direccion,
       edad,
       rol_id: rolDB.id,
@@ -74,6 +80,7 @@ const createUser = async (req, res) => {
       usuario: {
         id: nuevoUsuario.id,
         nombreUsuario: nuevoUsuario.nombreUsuario,
+        email: nuevoUsuario.email,
         rol: rolDB.nombre,
       },
     });
@@ -83,4 +90,48 @@ const createUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser };
+const eliminarUsuario = async (req, res) => {
+  try {
+    const usuarioLogueado = req.usuarioLogueado;
+
+    // Verificar si tiene reservas pendientes
+    const reservasPendientes = await Reserva.findAll({
+      where: {
+        usuario_id: usuarioLogueado.id,
+        fecha_fin: {
+          [Op.gte]: new Date(),
+        },
+      },
+    });
+
+    if (reservasPendientes.length > 0) {
+      return res.status(400).json({
+        error:
+          "No puedes eliminar tu cuenta porque tienes reservas pendientes.",
+        reservasPendientes: reservasPendientes.map((r) => ({
+          id: r.id,
+          fechaFin: r.fecha_fin,
+          estado: r.estado,
+        })),
+      });
+    }
+
+    // Borrado lógico
+    usuarioLogueado.eliminado = true;
+    await usuarioLogueado.save();
+
+    return res.status(200).json({
+      message: "Cuenta eliminada exitosamente (borrado lógico)",
+      usuario: {
+        id: usuarioLogueado.id,
+        nombreUsuario: usuarioLogueado.nombreUsuario,
+        email: usuarioLogueado.email,
+      },
+    });
+  } catch (error) {
+    console.error("Error en eliminarUsuario:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+module.exports = { createUser, eliminarUsuario };

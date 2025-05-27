@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { Usuario, Rol } = require("../models");
+const { Usuario, Rol } = require("../../db");
 
 const verificarToken = async (req, res, next) => {
   try {
@@ -20,8 +20,8 @@ const verificarToken = async (req, res, next) => {
       },
     });
 
-    if (!usuario) {
-      return res.status(401).json({ error: "Usuario no encontrado." });
+    if (!usuario || usuario.eliminado) {
+      return res.status(401).json({ error: "Usuario no válido o eliminado." });
     }
 
     req.usuarioLogueado = usuario;

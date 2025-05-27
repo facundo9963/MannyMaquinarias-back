@@ -1,10 +1,11 @@
 // seeders/20240601000000-all-seeds.js
 "use strict";
+const bcrypt = require("bcrypt");
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const now = new Date();
-
+    const hashedPassword = await bcrypt.hash("contra", 10);
     // 1. Crear Roles primero
     const roles = await queryInterface.bulkInsert(
       "roles",
@@ -155,9 +156,10 @@ module.exports = {
         {
           dni: "40123456",
           nombreUsuario: "admin",
+          email: "admin@gmail.com",
           nombre: "Administrador",
           apellido: "Sistema",
-          password: "$2b$10$EXAMPLEHASHEDPASSWORD",
+          password: hashedPassword,
           direccion: "Calle Admin 123",
           edad: 30,
           rol_id: roles[0].id,
@@ -167,9 +169,10 @@ module.exports = {
         {
           dni: "35123456",
           nombreUsuario: "trabajador1",
+          email: "Juan@gmail.com",
           nombre: "Juan",
           apellido: "Perez",
-          password: "$2b$10$EXAMPLEHASHEDPASSWORD",
+          password: hashedPassword,
           direccion: "Calle Trabajador 456",
           edad: 28,
           rol_id: roles[1].id,
@@ -179,9 +182,10 @@ module.exports = {
         {
           dni: "30123456",
           nombreUsuario: "cliente1",
+          email: "Maria@gmail.com",
           nombre: "Maria",
           apellido: "Gomez",
-          password: "$2b$10$EXAMPLEHASHEDPASSWORD",
+          password: hashedPassword,
           direccion: "Avenida Cliente 789",
           edad: 35,
           rol_id: roles[2].id,
@@ -200,6 +204,7 @@ module.exports = {
           nombre: "Excavadora Hidráulica",
           marca: "Caterpillar",
           modelo: "320 GC",
+          categoria: "industria",
           estado: "disponible",
           precio: 2500.0,
           sucursal_id: sucursales[0].id,
@@ -211,6 +216,7 @@ module.exports = {
           nombre: "Retroexcavadora",
           marca: "JCB",
           modelo: "3CX",
+          categoria: "industria",
           estado: "disponible",
           precio: 1800.0,
           sucursal_id: sucursales[0].id,

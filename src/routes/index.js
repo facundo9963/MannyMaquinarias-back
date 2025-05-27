@@ -3,7 +3,7 @@ const router = express.Router(); // ¡Esta línea es crucial!
 
 // Importa los otros routers
 const maquinasRouter = require("./maquinas");
-const reservasRouter = require("./reservas");
+const usuariosRouter = require("./usuarios");
 const authRouter = require("./auth");
 // Ruta de inicio
 router.get("/", (req, res) => {
@@ -11,15 +11,15 @@ router.get("/", (req, res) => {
     message: "API de MannyMaquinarias",
     endpoints: {
       maquinas: "/maquinas",
-      reservas: "/reservas",
-      usuarios: "/auth",
+      auth: "/auth",
+      usuarios: "/usuarios",
     },
   });
 });
 
 // Monta los otros routers
 router.use("/maquinas", maquinasRouter);
-router.use("/reservas", reservasRouter);
 router.use("/auth", authRouter);
+router.use("/usuarios", usuariosRouter);
 
 module.exports = router;

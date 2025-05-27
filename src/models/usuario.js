@@ -51,6 +51,27 @@ module.exports = (sequelize) => {
           },
         },
       },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: {
+          notEmpty: {
+            msg: "El email no puede estar vacío",
+          },
+          isEmail: {
+            msg: "Debe proporcionar un email válido",
+          },
+          len: {
+            args: [6, 100],
+            msg: "El email debe tener entre 6 y 100 caracteres",
+          },
+        },
+      },
+      eliminado: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
