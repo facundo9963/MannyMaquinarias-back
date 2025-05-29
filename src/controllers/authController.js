@@ -14,12 +14,28 @@ const registerUser = async (req, res) => {
     edad,
   } = req.body;
 
+  // Validar campos obligatorios
+  if (!email || !password || !edad) {
+    return res
+      .status(400)
+      .json({ error: "Email, contraseña y edad son obligatorios." });
+  }
+
   try {
-    const [dniExistente, usuarioExistente, emailExistente] = await Promise.all([
-      Usuario.findOne({ where: { dni } }),
-      Usuario.findOne({ where: { nombreUsuario } }),
-      Usuario.findOne({ where: { email } }),
-    ]);
+    const checks = [];
+
+    if (dni) checks.push(Usuario.findOne({ where: { dni } }));
+    else checks.push(null);
+
+    if (nombreUsuario)
+      checks.push(Usuario.findOne({ where: { nombreUsuario } }));
+    else checks.push(null);
+
+    checks.push(Usuario.findOne({ where: { email } }));
+
+    const [dniExistente, usuarioExistente, emailExistente] = await Promise.all(
+      checks
+    );
 
     if (dniExistente) {
       return res.status(400).json({ error: "El DNI ya está registrado." });
@@ -44,13 +60,13 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const nuevoUsuario = await Usuario.create({
-      dni,
-      nombreUsuario,
-      nombre,
-      apellido,
+      dni: dni || null,
+      nombreUsuario: nombreUsuario || null,
+      nombre: nombre || null,
+      apellido: apellido || null,
       password: hashedPassword,
       email,
-      direccion,
+      direccion: direccion || null,
       edad,
       rol_id: rolCliente.id,
     });
@@ -65,7 +81,6 @@ const registerUser = async (req, res) => {
     });
   } catch (err) {
     console.error("Error en registerUser:", err);
-    console.error(err.stack);
     return res.status(500).json({ error: "Error interno del servidor." });
   }
 };

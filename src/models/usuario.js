@@ -11,22 +11,14 @@ module.exports = (sequelize) => {
       },
       dni: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
-        validate: {
-          notEmpty: {
-            msg: "El DNI no puede estar vacío",
-          },
-        },
       },
       nombreUsuario: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
         validate: {
-          notEmpty: {
-            msg: "El nombre de usuario no puede estar vacío",
-          },
           len: {
             args: [4, 50],
             msg: "El nombre de usuario debe tener entre 4 y 50 caracteres",
@@ -35,21 +27,11 @@ module.exports = (sequelize) => {
       },
       nombre: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: {
-            msg: "El nombre no puede estar vacío",
-          },
-        },
+        allowNull: true,
       },
       apellido: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: {
-            msg: "El apellido no puede estar vacío",
-          },
-        },
+        allowNull: true,
       },
       email: {
         type: DataTypes.STRING,
@@ -87,12 +69,7 @@ module.exports = (sequelize) => {
       },
       direccion: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: {
-            msg: "La dirección no puede estar vacía",
-          },
-        },
+        allowNull: true,
       },
       edad: {
         type: DataTypes.INTEGER,
