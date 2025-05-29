@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const registerUser = async (req, res) => {
+  console.log(req.body);
   const {
     dni,
     nombreUsuario,
@@ -11,17 +12,40 @@ const registerUser = async (req, res) => {
     password,
     email,
     direccion,
-    edad,
+    fechaNacimiento, // Cambiamos edad por fechaNacimiento
   } = req.body;
 
   // Validar campos obligatorios
-  if (!email || !password || !edad) {
+  if (!email || !password || !fechaNacimiento) {
     return res
       .status(400)
-      .json({ error: "Email, contraseña y edad son obligatorios." });
+      .json({
+        error: "Email, contraseña y fecha de nacimiento son obligatorios.",
+      });
   }
 
   try {
+    // Validar que fechaNacimiento sea una fecha válida
+    const fechaNac = new Date(fechaNacimiento);
+    if (isNaN(fechaNac.getTime())) {
+      return res.status(400).json({ error: "Fecha de nacimiento no válida." });
+    }
+
+    // Calcular la edad
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const mes = hoy.getMonth() - fechaNac.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+      edad--;
+    }
+
+    // Validar que el usuario sea mayor de 18 años
+    if (edad < 18) {
+      return res
+        .status(400)
+        .json({ error: "Debes ser mayor de 18 años para registrarte." });
+    }
+
     const checks = [];
 
     if (dni) checks.push(Usuario.findOne({ where: { dni } }));
@@ -77,6 +101,7 @@ const registerUser = async (req, res) => {
         id: nuevoUsuario.id,
         nombreUsuario: nuevoUsuario.nombreUsuario,
         email: nuevoUsuario.email,
+        edad: nuevoUsuario.edad,
       },
     });
   } catch (err) {

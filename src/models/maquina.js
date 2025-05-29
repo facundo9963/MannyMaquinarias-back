@@ -82,6 +82,16 @@ module.exports = (sequelize) => {
           },
         },
       },
+      imageUrl: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+        defaultValue: null,
+        validate: {
+          isUrl: {
+            msg: "La URL de la imagen debe ser una URL válida",
+          },
+        },
+      },
     },
     {
       tableName: "maquinas",
