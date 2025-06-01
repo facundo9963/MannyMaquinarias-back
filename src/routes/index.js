@@ -6,6 +6,8 @@ const maquinasRouter = require("./maquinas");
 const usuariosRouter = require("./usuarios");
 const authRouter = require("./auth");
 const listaNegra = require("./listaNegra");
+const reservasRouter = require("./reservas");
+
 
 const pagosRoutes = require("./pagos");
 
@@ -18,6 +20,7 @@ router.get("/", (req, res) => {
       auth: "/auth",
       usuarios: "/usuarios",
       listaNegra: "/listaNegra",
+      reservas: "/reservas",
     },
   });
 });
@@ -27,6 +30,7 @@ router.use("/maquinas", maquinasRouter);
 router.use("/auth", authRouter);
 router.use("/usuarios", usuariosRouter);
 router.use("/listaNegra", listaNegra);
+router.use("/reservas", reservasRouter);
 
 router.use("/pagos", pagosRoutes);
 
