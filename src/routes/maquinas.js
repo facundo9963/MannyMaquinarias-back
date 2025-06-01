@@ -9,4 +9,6 @@ router.post('/add', maquinasController.agregarMaquina);
 
 router.delete('/delete/:id', maquinasController.eliminarMaquina);
 
+router.put('/update/:id', maquinasController.modificarMaquina);
+
 module.exports = router;

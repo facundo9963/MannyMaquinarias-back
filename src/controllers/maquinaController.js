@@ -178,6 +178,81 @@ const agregarMaquina = async (req, res) => {
     }
 }
 
+const modificarMaquina = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, marca, modelo, precio, categoria, imageUrl, sucursal_id } = req.body;
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: "ID de máquina no válido" });
+    }
+    const maquina = await Maquina.findByPk(id);
+    if (!maquina) {
+      return res.status(404).json({ error: "Máquina no encontrada" });
+    }
+    const actualizacion = {
+      nombre,
+      marca,
+      modelo,
+      precio,
+      categoria,
+      imageUrl,
+      sucursal_id,
+    };
+    // Validar que la sucursal exista
+    if (sucursal_id) {
+      const sucursal = await Sucursal.findByPk(sucursal_id);
+      if (!sucursal) {
+        return res.status(404).json({ error: "Sucursal no encontrada" });
+      }
+    }
+    const reservasPendientes = await Reserva.findAll({
+      where: {
+        maquina_id: id,
+        fecha_fin: { [Op.gte]: new Date() },
+      }
+    });
+
+    if (reservasPendientes.length > 0) {
+      return res.status(409).json({
+        error: "No se puede modificar la máquina",
+        detalles: "Tiene reservas pendientes activas",
+        reservas: reservasPendientes.map(r => ({
+          id: r.id,
+          fecha_inicio: r.fecha_inicio,
+          fecha_fin: r.fecha_fin,
+        }))
+      });
+    }
+    // Validar que el precio sea un número positivo
+    if (precio !== undefined && (isNaN(precio) || precio < 0)) {
+      return res.status(400).json({ error: "El precio debe ser un número positivo" });
+    }
+    // Actualizar la máquina
+    await maquina.update(actualizacion);
+    return res.status(200).json({
+      success: true,
+      message: "Máquina actualizada correctamente",
+      data: {
+        id: maquina.id,
+        nombre: maquina.nombre,
+        marca: maquina.marca,
+        modelo: maquina.modelo,
+        precio: maquina.precio,
+        categoria: maquina.categoria,
+        imageUrl: maquina.imageUrl,
+        sucursal_id: maquina.sucursal_id,
+      },
+    });
+  } catch (error) {
+    console.error("Error en modificarMaquina:", error);
+    return res.status(500).json({
+      error: "Error interno del servidor",
+      detalles: error.message,
+    });
+  }
+};
+
+
 const eliminarMaquina = async (req, res) => {
   try {
     const { id } = req.params;
@@ -245,4 +320,4 @@ const eliminarMaquina = async (req, res) => {
   }
 };
 
-module.exports = {listarMaquinas, agregarMaquina, eliminarMaquina};
+module.exports = {listarMaquinas, agregarMaquina, eliminarMaquina, modificarMaquina};
