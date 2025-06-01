@@ -1,8 +1,23 @@
 const express = require("express");
 const router = express.Router();
-const { eliminarUsuario } = require("../controllers/usuarioController");
+const {
+  eliminarUsuario,
+  eliminarUsuarioPorAdmin,
+} = require("../controllers/usuarioController");
 const verificarToken = require("../middlewares/verificarToken");
+const verificarAdmin = require("../middlewares/verificarAdmin");
 
-router.delete("/eliminar", verificarToken, eliminarUsuario);
+router.delete(
+  "/eliminar",
+  verificarToken,
+  eliminarUsuario,
+  eliminarUsuarioPorAdmin
+);
 
+router.delete(
+  "/eliminar/:id",
+  verificarToken,
+  verificarAdmin,
+  eliminarUsuarioPorAdmin
+);
 module.exports = router;
