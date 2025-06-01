@@ -101,6 +101,12 @@ module.exports = (sequelize) => {
       foreignKey: "usuario_id",
       as: "reservas",
     });
+    Usuario.associate = (models) => {
+      Usuario.hasOne(models.ListaNegra, {
+        foreignKey: "usuario_id",
+        as: "listaNegra",
+      });
+    };
   };
 
   Usuario.prototype.tienePermiso = async function (permisoRequerido) {

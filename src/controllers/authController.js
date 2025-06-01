@@ -17,11 +17,9 @@ const registerUser = async (req, res) => {
 
   // Validar campos obligatorios
   if (!email || !password || !fechaNacimiento) {
-    return res
-      .status(400)
-      .json({
-        error: "Email, contraseña y fecha de nacimiento son obligatorios.",
-      });
+    return res.status(400).json({
+      error: "Email, contraseña y fecha de nacimiento son obligatorios.",
+    });
   }
 
   try {
@@ -140,6 +138,7 @@ const loginUser = async (req, res) => {
       {
         id: usuario.id,
         rol_id: usuario.rol_id,
+        rol_nombre: usuario.rol.nombre, // <--- agregamos esto
         nombre: usuario.nombre,
         nombreUsuario: usuario.nombreUsuario,
         email: usuario.email,

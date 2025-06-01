@@ -5,6 +5,7 @@ const router = express.Router(); // ¡Esta línea es crucial!
 const maquinasRouter = require("./maquinas");
 const usuariosRouter = require("./usuarios");
 const authRouter = require("./auth");
+const listaNegra = require("./listaNegra");
 // Ruta de inicio
 router.get("/", (req, res) => {
   res.json({
@@ -13,6 +14,7 @@ router.get("/", (req, res) => {
       maquinas: "/maquinas",
       auth: "/auth",
       usuarios: "/usuarios",
+      listaNegra: "/listaNegra",
     },
   });
 });
@@ -21,5 +23,6 @@ router.get("/", (req, res) => {
 router.use("/maquinas", maquinasRouter);
 router.use("/auth", authRouter);
 router.use("/usuarios", usuariosRouter);
+router.use("/listaNegra", listaNegra);
 
 module.exports = router;
