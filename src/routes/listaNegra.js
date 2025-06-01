@@ -8,7 +8,7 @@ const {
 const verificarAdmin = require("../middlewares/verificarAdmin");
 const verificarToken = require("../middlewares/verificarToken");
 router.post(
-  "/:usuarioId",
+  "/:email",
   verificarToken,
   verificarAdmin,
   agregarUsuarioAListaNegra

@@ -1,31 +1,38 @@
 const { ListaNegra, Usuario } = require("../../db");
 
 const agregarUsuarioAListaNegra = async (req, res) => {
-  const { usuarioId } = req.params;
+  const { email } = req.params;
+
+  if (!email) {
+    return res.status(400).json({ error: "Se requiere un email." });
+  }
 
   try {
-    const usuario = await Usuario.findByPk(usuarioId);
+    const usuario = await Usuario.findOne({ where: { email } });
+
     if (!usuario) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+      return res.status(404).json({ error: "Usuario no encontrado." });
     }
 
-    const yaBloqueado = await ListaNegra.findOne({
-      where: { usuario_id: usuarioId },
+    // Verificar si ya está en lista negra
+    const existente = await ListaNegra.findOne({
+      where: { usuario_id: usuario.id },
     });
-    if (yaBloqueado) {
+
+    if (existente) {
       return res
         .status(400)
-        .json({ error: "El usuario ya está en la lista negra" });
+        .json({ error: "El usuario ya está en la lista negra." });
     }
 
-    await ListaNegra.create({ usuario_id: usuarioId });
+    await ListaNegra.create({ usuario_id: usuario.id });
 
     return res
       .status(201)
-      .json({ message: "Usuario agregado a la lista negra exitosamente" });
+      .json({ message: "Usuario agregado a la lista negra." });
   } catch (error) {
-    console.error("Error al agregar a lista negra:", error);
-    return res.status(500).json({ error: "Error interno del servidor" });
+    console.error("Error al agregar a la lista negra:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
   }
 };
 
