@@ -136,19 +136,19 @@ const eliminarUsuario = async (req, res) => {
 
 const eliminarUsuarioPorAdmin = async (req, res) => {
   try {
-    const { id } = req.params;
-    const idAdmin = req.usuarioLogueado.id;
+    const { email } = req.params;
+    const emailAdmin = req.usuarioLogueado.email;
 
     // Impedir que el admin se elimine a sí mismo
-    if (parseInt(id) === idAdmin) {
+    if (email === emailAdmin) {
       return res.status(403).json({
         error:
           "No puedes eliminar tu propia cuenta desde esta acción de administrador.",
       });
     }
 
-    // Buscar el usuario por ID
-    const usuario = await Usuario.findByPk(id);
+    // Buscar el usuario por email
+    const usuario = await Usuario.findOne({ where: { email } });
 
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });

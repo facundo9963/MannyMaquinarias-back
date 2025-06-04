@@ -15,7 +15,7 @@ router.delete(
 );
 
 router.delete(
-  "/eliminar/:id",
+  "/eliminar/:email",
   verificarToken,
   verificarAdmin,
   eliminarUsuarioPorAdmin
