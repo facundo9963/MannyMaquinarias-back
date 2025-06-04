@@ -24,28 +24,29 @@ module.exports = (sequelize) => {
         },
       },
       fecha_inicio: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false,
         validate: {
           isDate: {
             msg: "Debe proporcionar una fecha de inicio válida",
           },
           isAfterCurrentDate(value) {
-            if (new Date(value) < new Date()) {
+            const hoy = new Date().toISOString().split("T")[0]; // formato YYYY-MM-DD
+            if (value <= hoy) {
               throw new Error("La fecha de inicio debe ser futura");
             }
           },
         },
       },
       fecha_fin: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false,
         validate: {
           isDate: {
             msg: "Debe proporcionar una fecha de fin válida",
           },
           isAfterStartDate(value) {
-            if (new Date(value) <= new Date(this.fecha_inicio)) {
+            if (value <= this.fecha_inicio) {
               throw new Error(
                 "La fecha fin debe ser posterior a la fecha inicio"
               );
@@ -54,10 +55,12 @@ module.exports = (sequelize) => {
         },
       },
       fecha_reserva: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         defaultValue: DataTypes.NOW,
         validate: {
-          isDate: true,
+          isDate: {
+            msg: "Debe ser una fecha válida",
+          },
         },
       },
     },
