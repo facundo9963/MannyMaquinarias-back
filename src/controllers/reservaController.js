@@ -2,7 +2,8 @@ const { Reserva, Maquina, Usuario, ListaNegra } = require("../../db");
 const db = require("../../db"); // Asegúrate de que este es el camino correcto a tu archivo de configuración de la base de datos
 
 const crearReserva = async (req, res) => {
-    const { precio, fecha_inicio, fecha_fin, usuario_id, maquina_id } = req.body;
+    const usuarioLogueado = req.usuarioLogueado;
+    const { precio, fecha_inicio, fecha_fin, maquina_id } = req.body;
     const inicio = new Date(fecha_inicio);
     const fin = new Date(fecha_fin);
 
@@ -56,7 +57,7 @@ const crearReserva = async (req, res) => {
       precio,
       fecha_inicio,
       fecha_fin,
-      usuario_id,
+      usuario_id: usuarioLogueado.id,
       maquina_id,
     });
 
@@ -68,11 +69,11 @@ const crearReserva = async (req, res) => {
 };
 
 const obtenerReservasPropias = async (req, res) => {
-  const { usuarioId } = req.params;
+  const usuarioLogueado = req.usuarioLogueado;
 
   try {
     const reservas = await Reserva.findAll({
-      where: { usuario_id: usuarioId },
+      where: { usuario_id: usuarioLogueado.id },
       include: [
         {
           model: db.Maquina,
