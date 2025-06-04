@@ -47,6 +47,10 @@ const crearReserva = async (req, res) => {
     if (usuarioEnListaNegra) {
         return res.status(403).json({ error: 'El usuario está en la lista negra y no puede hacer reservas' });
     }
+    const maquina = await Maquina.findByPk(maquina_id);
+    if (precio !== maquina.precio * Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24))) {
+        return res.status(400).json({ error: 'El precio no coincide con el precio diario de la máquina' });
+    }
   try {
     const nuevaReserva = await Reserva.create({
       precio,
