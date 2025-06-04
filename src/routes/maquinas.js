@@ -5,10 +5,12 @@ const maquinasController = require("../controllers/maquinaController");
 // GET /maquinas
 router.get("/", maquinasController.listarMaquinas);
 
-router.post('/add', maquinasController.agregarMaquina);
+router.get("/:numeroSerie", maquinasController.obtenerMaquinaPorSerie);
 
-router.delete('/delete/:id', maquinasController.eliminarMaquina);
+router.post("/add", maquinasController.agregarMaquina);
 
-router.put('/update/:id', maquinasController.modificarMaquina);
+router.delete("/delete/:id", maquinasController.eliminarMaquina);
+
+router.put("/update/:id", maquinasController.modificarMaquina);
 
 module.exports = router;

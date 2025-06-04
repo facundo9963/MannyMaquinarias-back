@@ -134,4 +134,64 @@ const eliminarUsuario = async (req, res) => {
   }
 };
 
-module.exports = { createUser, eliminarUsuario };
+const eliminarUsuarioPorAdmin = async (req, res) => {
+  try {
+    const { email } = req.params;
+    const emailAdmin = req.usuarioLogueado.email;
+
+    // Impedir que el admin se elimine a sí mismo
+    if (email === emailAdmin) {
+      return res.status(403).json({
+        error:
+          "No puedes eliminar tu propia cuenta desde esta acción de administrador.",
+      });
+    }
+
+    // Buscar el usuario por email
+    const usuario = await Usuario.findOne({ where: { email } });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    // Verificar si tiene reservas pendientes
+    const reservasPendientes = await Reserva.findAll({
+      where: {
+        usuario_id: usuario.id,
+        fecha_fin: {
+          [Op.gte]: new Date(),
+        },
+      },
+    });
+
+    if (reservasPendientes.length > 0) {
+      return res.status(400).json({
+        error:
+          "No puedes eliminar este usuario porque tiene reservas pendientes.",
+        reservasPendientes: reservasPendientes.map((r) => ({
+          id: r.id,
+          fechaFin: r.fecha_fin,
+          estado: r.estado,
+        })),
+      });
+    }
+
+    // Borrado lógico
+    usuario.eliminado = true;
+    await usuario.save();
+
+    return res.status(200).json({
+      message: "Usuario eliminado exitosamente (borrado lógico)",
+      usuario: {
+        id: usuario.id,
+        nombreUsuario: usuario.nombreUsuario,
+        email: usuario.email,
+      },
+    });
+  } catch (error) {
+    console.error("Error en eliminarUsuarioPorAdmin:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+module.exports = { createUser, eliminarUsuario, eliminarUsuarioPorAdmin };

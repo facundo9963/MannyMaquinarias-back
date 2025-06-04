@@ -170,18 +170,19 @@ const listarMaquinas = async (req, res) => {
 };
 
 const agregarMaquina = async (req, res) => {
-    try {
-        const nuevaMaquina = await Maquina.create(req.body);
-        res.status(201).json(nuevaMaquina);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-}
+  try {
+    const nuevaMaquina = await Maquina.create(req.body);
+    res.status(201).json(nuevaMaquina);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 const modificarMaquina = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, marca, modelo, precio, categoria, imageUrl, sucursal_id } = req.body;
+    const { nombre, marca, modelo, precio, categoria, imageUrl, sucursal_id } =
+      req.body;
     if (!id || isNaN(id)) {
       return res.status(400).json({ error: "ID de máquina no válido" });
     }
@@ -209,23 +210,25 @@ const modificarMaquina = async (req, res) => {
       where: {
         maquina_id: id,
         fecha_fin: { [Op.gte]: new Date() },
-      }
+      },
     });
 
     if (reservasPendientes.length > 0) {
       return res.status(409).json({
         error: "No se puede modificar la máquina",
         detalles: "Tiene reservas pendientes activas",
-        reservas: reservasPendientes.map(r => ({
+        reservas: reservasPendientes.map((r) => ({
           id: r.id,
           fecha_inicio: r.fecha_inicio,
           fecha_fin: r.fecha_fin,
-        }))
+        })),
       });
     }
     // Validar que el precio sea un número positivo
     if (precio !== undefined && (isNaN(precio) || precio < 0)) {
-      return res.status(400).json({ error: "El precio debe ser un número positivo" });
+      return res
+        .status(400)
+        .json({ error: "El precio debe ser un número positivo" });
     }
     // Actualizar la máquina
     await maquina.update(actualizacion);
@@ -234,6 +237,7 @@ const modificarMaquina = async (req, res) => {
       message: "Máquina actualizada correctamente",
       data: {
         id: maquina.id,
+        numeroSerie: maquina.numeroSerie,
         nombre: maquina.nombre,
         marca: maquina.marca,
         modelo: maquina.modelo,
@@ -252,7 +256,6 @@ const modificarMaquina = async (req, res) => {
   }
 };
 
-
 const eliminarMaquina = async (req, res) => {
   try {
     const { id } = req.params;
@@ -264,16 +267,16 @@ const eliminarMaquina = async (req, res) => {
     const maquina = await Maquina.findByPk(id);
 
     if (!maquina) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: "Máquina no encontrada",
-        detalles: `No existe una máquina con el ID ${id}`
+        detalles: `No existe una máquina con el ID ${id}`,
       });
     }
 
     if (maquina.eliminado) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: "La máquina ya está eliminada",
-        detalles: `La máquina con ID ${id} ya fue marcada como eliminada anteriormente`
+        detalles: `La máquina con ID ${id} ya fue marcada como eliminada anteriormente`,
       });
     }
 
@@ -282,18 +285,18 @@ const eliminarMaquina = async (req, res) => {
       where: {
         maquina_id: id,
         fecha_fin: { [Op.gte]: new Date() },
-      }
+      },
     });
 
     if (reservasPendientes.length > 0) {
       return res.status(409).json({
         error: "No se puede eliminar la máquina",
         detalles: "Tiene reservas pendientes activas",
-        reservas: reservasPendientes.map(r => ({
+        reservas: reservasPendientes.map((r) => ({
           id: r.id,
           fecha_inicio: r.fecha_inicio,
           fecha_fin: r.fecha_fin,
-        }))
+        })),
       });
     }
 
@@ -307,17 +310,40 @@ const eliminarMaquina = async (req, res) => {
         id: maquina.id,
         nombre: maquina.nombre,
         eliminado: true,
-        deletedAt: new Date()
-      }
+        deletedAt: new Date(),
+      },
     });
-
   } catch (error) {
     console.error("Error en eliminarMaquina:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: "Error interno del servidor",
-      detalles: error.message 
+      detalles: error.message,
     });
   }
 };
 
-module.exports = {listarMaquinas, agregarMaquina, eliminarMaquina, modificarMaquina};
+const obtenerMaquinaPorSerie = async (req, res) => {
+  try {
+    const { numeroSerie } = req.params;
+
+    // Buscar la máquina por número de serie
+    const maquina = await Maquina.findOne({ where: { numeroSerie } });
+
+    if (!maquina) {
+      return res.status(404).json({ error: "Máquina no encontrada" });
+    }
+
+    return res.status(200).json({ maquina });
+  } catch (error) {
+    console.error("Error al obtener la máquina por número de serie:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+module.exports = {
+  listarMaquinas,
+  agregarMaquina,
+  eliminarMaquina,
+  modificarMaquina,
+  obtenerMaquinaPorSerie,
+};

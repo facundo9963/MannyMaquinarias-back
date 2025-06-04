@@ -201,6 +201,7 @@ module.exports = {
       "maquinas",
       [
         {
+          numeroSerie: "2222",
           nombre: "Excavadora Hidráulica",
           marca: "Caterpillar",
           modelo: "320 GC",
@@ -215,6 +216,7 @@ module.exports = {
           updatedAt: now,
         },
         {
+          numeroSerie: "3333",
           nombre: "Retroexcavadora",
           marca: "JCB",
           modelo: "3CX",
@@ -229,6 +231,7 @@ module.exports = {
           updatedAt: now,
         },
         {
+          numeroSerie: "4444",
           nombre: "Minicargadora",
           marca: "Bobcat",
           modelo: "S650",
@@ -243,6 +246,7 @@ module.exports = {
           updatedAt: now,
         },
         {
+          numeroSerie: "5555",
           nombre: "Martillo Hidráulico",
           marca: "Atlas Copco",
           modelo: "HB 2500",
@@ -257,6 +261,7 @@ module.exports = {
           updatedAt: now,
         },
         {
+          numeroSerie: "6666",
           nombre: "Plataforma Elevadora",
           marca: "Genie",
           modelo: "GS-1930",

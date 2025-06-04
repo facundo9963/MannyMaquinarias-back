@@ -9,6 +9,11 @@ module.exports = (sequelize) => {
         primaryKey: true,
         autoIncrement: true,
       },
+      numeroSerie: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        unique: true,
+      },
       nombre: {
         type: DataTypes.STRING,
         allowNull: false,
