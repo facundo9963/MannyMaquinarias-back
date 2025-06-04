@@ -91,6 +91,24 @@ const obtenerReservasPropias = async (req, res) => {
   }
 };
 
+const marcarComoPagada = async (req, res) => {
+  const { reservaId } = req.params;
+
+  try {
+    const reserva = await Reserva.findByPk(reservaId);
+    if (!reserva) {
+      return res.status(404).json({ error: 'Reserva no encontrada' });
+    }
+
+    // Aquí podrías agregar lógica para marcar la reserva como pagada
+    // Por ejemplo, podrías agregar un campo 'pagada' en el modelo Reserva
+
+    res.json({ message: 'Reserva marcada como pagada', reserva });
+  } catch (error) {
+    console.error('Error al marcar la reserva como pagada:', error);
+    res.status(500).json({ error: 'Error al marcar la reserva como pagada' });
+  }
+};
 module.exports = {
   crearReserva,
   obtenerReservasPropias,

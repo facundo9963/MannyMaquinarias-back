@@ -194,4 +194,139 @@ const eliminarUsuarioPorAdmin = async (req, res) => {
   }
 };
 
-module.exports = { createUser, eliminarUsuario, eliminarUsuarioPorAdmin };
+const listarInformacionUsuario = async (req, res) => {
+  try {
+    const usuarioLogueado = req.usuarioLogueado;
+
+    if (!usuarioLogueado) {
+      return res.status(403).json({ error: "No autorizado." });
+    }
+
+    const usuario = await Usuario.findByPk(usuarioLogueado.id, {
+      attributes: [
+        "dni",
+        "nombre",
+        "apellido",
+        "email",
+        "direccion",
+        "edad",
+      ],
+      include: [
+        {
+          model: Rol,
+          as: "rol",
+          attributes: [ "nombre"],
+        },
+      ],
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    return res.status(200).json(usuario);
+  }
+  catch (error) {
+    console.error("Error en ListarInformacionUsuario:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+}
+
+const modificarUsuario = async (req, res) => {
+  const usuarioLogueado = req.usuarioLogueado;
+  const { dni, nombreUsuario, nombre, apellido, email, direccion, edad } =
+    req.body;
+  try {
+    // Verificar si el usuario existe
+    const usuario = await Usuario.findByPk(usuarioLogueado.id);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    // Actualizar los campos del usuario
+    usuario.dni = dni || usuario.dni;
+    usuario.nombreUsuario = nombreUsuario || usuario.nombreUsuario;
+    usuario.nombre = nombre || usuario.nombre;
+    usuario.apellido = apellido || usuario.apellido;
+    usuario.email = email || usuario.email;
+    usuario.direccion = direccion || usuario.direccion;
+    usuario.edad = edad || usuario.edad;
+
+    await usuario.save();
+
+    return res.status(200).json({
+      message: "Usuario modificado correctamente.",
+      usuario: {
+        id: usuario.id,
+        nombreUsuario: usuario.nombreUsuario,
+        email: usuario.email,
+      },
+    });
+  } catch (err) {
+    console.error("Error en modificarUsuario:", err);
+    return res.status(500).json({ error: "Error interno del servidor." });
+  }
+}
+
+const verUsuarios = async (req, res) => {
+  const { rol } = req.body;
+  if (rol && isNaN(rol)) {
+    return res.status(400).json({ error: "El rol debe ser un número." });
+  }
+  
+  
+  try {
+    let usuarios;
+    if (!rol) {
+      usuarios = await Usuario.findAll({
+        where: { eliminado: false },
+        attributes: [
+          "id",
+          "dni",
+          "nombre",
+          "apellido",
+          "email",
+          "direccion",
+          "edad",
+        ],
+        include: [
+          {
+            model: Rol,
+            as: "rol",
+            attributes: ["nombre"],
+          },
+        ],
+      });
+    }
+    else {
+      usuarios = await Usuario.findAll({
+        where: { rol_id: rol },
+        attributes: [
+          "id",
+          "dni",
+          "nombre",
+          "apellido",
+          "email",
+          "direccion",
+          "edad",
+        ],
+        include: [
+          {
+            model: Rol,
+            as: "rol",
+            attributes: ["nombre"],
+          },
+        ],    
+      });
+    }
+    if (usuarios.length === 0) {
+      return res.status(404).json({ message: "No se encontraron usuarios." });
+    }
+
+    return res.status(200).json(usuarios);
+  } catch (error) {
+    console.error("Error al obtener usuarios por rol:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
+  }
+}
+module.exports = { createUser, eliminarUsuario, eliminarUsuarioPorAdmin, listarInformacionUsuario, modificarUsuario, verUsuarios };

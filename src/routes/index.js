@@ -7,9 +7,9 @@ const usuariosRouter = require("./usuarios");
 const authRouter = require("./auth");
 const listaNegra = require("./listaNegra");
 const reservasRouter = require("./reservas");
-
-
+const politicasCancelacionRouter = require("./politicasCancelacion");
 const pagosRoutes = require("./pagos");
+const sucursalesRouter = require("./sucursales");
 
 // Ruta de inicio
 router.get("/", (req, res) => {
@@ -21,6 +21,9 @@ router.get("/", (req, res) => {
       usuarios: "/usuarios",
       listaNegra: "/listaNegra",
       reservas: "/reservas",
+      politicasCancelacion: "/politicasCancelacion",
+      sucursales: "/sucursales",
+
     },
   });
 });
@@ -31,7 +34,8 @@ router.use("/auth", authRouter);
 router.use("/usuarios", usuariosRouter);
 router.use("/listaNegra", listaNegra);
 router.use("/reservas", reservasRouter);
-
+router.use("/politicasCancelacion", politicasCancelacionRouter);
 router.use("/pagos", pagosRoutes);
+router.use("/sucursales", sucursalesRouter);
 
 module.exports = router;
