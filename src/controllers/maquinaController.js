@@ -133,7 +133,10 @@ const listarMaquinas = async (req, res) => {
     }
 
     const maquinas = await Maquina.findAll({
-      where: {whereConditions, eliminado: false },
+      where: {
+    ...whereConditions, // Usamos spread operator para combinar condiciones
+    eliminado: false
+    },
       include: [
         includeSucursal,
         {
