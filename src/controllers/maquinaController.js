@@ -133,7 +133,7 @@ const listarMaquinas = async (req, res) => {
     }
 
     const maquinas = await Maquina.findAll({
-      where: whereConditions,
+      where: {whereConditions, eliminado: false },
       include: [
         includeSucursal,
         {

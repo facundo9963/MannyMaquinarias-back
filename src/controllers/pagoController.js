@@ -16,7 +16,7 @@ const crearPago = async (req, res) => {
           }
         ],
         back_urls: {
-          success: 'https://www.youtube.com',//'http://localhost:3001/pagos/success',
+          success: 'http://localhost:3001/pagos/success',
           failure: 'http://localhost:3001/pagos/failure',
           pending: 'http://localhost:3001/pagos/pending',
         },
