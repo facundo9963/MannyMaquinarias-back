@@ -35,6 +35,11 @@ const crearReserva = async (req, res) => {
         ],
       },
     });
+    
+    const maquinaExiste = await Maquina.findByPk(maquina_id);
+    if (!maquinaExiste) {
+      return res.status(404).json({ error: 'La máquina especificada no existe' });
+    }
 
     if (conflicto) {
       return res.status(400).json({
