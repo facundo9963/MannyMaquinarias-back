@@ -5,17 +5,12 @@ const {
   eliminarUsuarioPorAdmin,
   listarInformacionUsuario,
   modificarUsuario,
-  verUsuarios
+  verUsuarios,
 } = require("../controllers/usuarioController");
 const verificarToken = require("../middlewares/verificarToken");
 const verificarAdmin = require("../middlewares/verificarAdmin");
 
-router.delete(
-  "/eliminar",
-  verificarToken,
-  eliminarUsuario,
-  eliminarUsuarioPorAdmin
-);
+router.delete("/eliminar", verificarToken, eliminarUsuario);
 
 router.delete(
   "/eliminar/:email",
@@ -24,24 +19,10 @@ router.delete(
   eliminarUsuarioPorAdmin
 );
 
-router.get(
-  "/rol",
-  verificarToken,
-  verificarAdmin,
-  verUsuarios
-);
+router.get("/rol", verificarToken, verificarAdmin, verUsuarios);
 
-router.get(
-  "/",
-  verificarToken,
-  listarInformacionUsuario
-)
+router.get("/", verificarToken, listarInformacionUsuario);
 
-router.put(
-  "/update",
-  verificarToken,
-  modificarUsuario
-);
-
+router.put("/update", verificarToken, modificarUsuario);
 
 module.exports = router;

@@ -93,6 +93,17 @@ const createUser = async (req, res) => {
 const eliminarUsuario = async (req, res) => {
   try {
     const usuarioLogueado = req.usuarioLogueado;
+    console.log(usuarioLogueado);
+
+    // Verificar si el usuario es administrador
+    if (
+      usuarioLogueado.rol &&
+      usuarioLogueado.rol.nombre.toLowerCase().trim() === "admin"
+    ) {
+      return res.status(403).json({
+        error: "No puedes eliminar tu cuenta porque eres administrador.",
+      });
+    }
 
     // Verificar si tiene reservas pendientes
     const reservasPendientes = await Reserva.findAll({
@@ -203,19 +214,12 @@ const listarInformacionUsuario = async (req, res) => {
     }
 
     const usuario = await Usuario.findByPk(usuarioLogueado.id, {
-      attributes: [
-        "dni",
-        "nombre",
-        "apellido",
-        "email",
-        "direccion",
-        "edad",
-      ],
+      attributes: ["dni", "nombre", "apellido", "email", "direccion", "edad"],
       include: [
         {
           model: Rol,
           as: "rol",
-          attributes: [ "nombre"],
+          attributes: ["nombre"],
         },
       ],
     });
@@ -225,17 +229,24 @@ const listarInformacionUsuario = async (req, res) => {
     }
 
     return res.status(200).json(usuario);
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error en ListarInformacionUsuario:", error);
     return res.status(500).json({ error: "Error interno del servidor" });
   }
-}
+};
 
 const modificarUsuario = async (req, res) => {
   const usuarioLogueado = req.usuarioLogueado;
-  const { dni, nombreUsuario, nombre, apellido, email, direccion, edad, password } =
-    req.body;
+  const {
+    dni,
+    nombreUsuario,
+    nombre,
+    apellido,
+    email,
+    direccion,
+    edad,
+    password,
+  } = req.body;
   try {
     // Verificar si el usuario existe
     const usuario = await Usuario.findByPk(usuarioLogueado.id);
@@ -267,15 +278,14 @@ const modificarUsuario = async (req, res) => {
     console.error("Error en modificarUsuario:", err);
     return res.status(500).json({ error: "Error interno del servidor." });
   }
-}
+};
 
 const verUsuarios = async (req, res) => {
   const { rol } = req.body;
   if (rol && isNaN(rol)) {
     return res.status(400).json({ error: "El rol debe ser un número." });
   }
-  
-  
+
   try {
     let usuarios;
     if (!rol) {
@@ -298,8 +308,7 @@ const verUsuarios = async (req, res) => {
           },
         ],
       });
-    }
-    else {
+    } else {
       usuarios = await Usuario.findAll({
         where: { rol_id: rol },
         attributes: [
@@ -317,7 +326,7 @@ const verUsuarios = async (req, res) => {
             as: "rol",
             attributes: ["nombre"],
           },
-        ],    
+        ],
       });
     }
     if (usuarios.length === 0) {
@@ -329,5 +338,12 @@ const verUsuarios = async (req, res) => {
     console.error("Error al obtener usuarios por rol:", error);
     return res.status(500).json({ error: "Error interno del servidor." });
   }
-}
-module.exports = { createUser, eliminarUsuario, eliminarUsuarioPorAdmin, listarInformacionUsuario, modificarUsuario, verUsuarios };
+};
+module.exports = {
+  createUser,
+  eliminarUsuario,
+  eliminarUsuarioPorAdmin,
+  listarInformacionUsuario,
+  modificarUsuario,
+  verUsuarios,
+};
