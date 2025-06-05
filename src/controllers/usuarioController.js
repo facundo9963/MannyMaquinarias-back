@@ -234,7 +234,7 @@ const listarInformacionUsuario = async (req, res) => {
 
 const modificarUsuario = async (req, res) => {
   const usuarioLogueado = req.usuarioLogueado;
-  const { dni, nombreUsuario, nombre, apellido, email, direccion, edad } =
+  const { dni, nombreUsuario, nombre, apellido, email, direccion, edad, password } =
     req.body;
   try {
     // Verificar si el usuario existe
@@ -242,7 +242,7 @@ const modificarUsuario = async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
-
+    const hashedPassword = await bcrypt.hash(password, 10);
     // Actualizar los campos del usuario
     usuario.dni = dni || usuario.dni;
     usuario.nombreUsuario = nombreUsuario || usuario.nombreUsuario;
@@ -251,6 +251,7 @@ const modificarUsuario = async (req, res) => {
     usuario.email = email || usuario.email;
     usuario.direccion = direccion || usuario.direccion;
     usuario.edad = edad || usuario.edad;
+    usuario.password = hashedPassword || usuario.password;
 
     await usuario.save();
 

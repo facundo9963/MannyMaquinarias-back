@@ -1,4 +1,5 @@
 const { Reserva, Maquina, Usuario, ListaNegra } = require("../../db");
+const { Op } = require("sequelize");
 const db = require("../../db"); // Asegúrate de que este es el camino correcto a tu archivo de configuración de la base de datos
 
 const crearReserva = async (req, res) => {
@@ -41,9 +42,10 @@ const crearReserva = async (req, res) => {
       });
     }
 
-    if (!precio || !fecha_inicio || !fecha_fin || !usuario_id || !maquina_id) {
+    if (!precio || !fecha_inicio || !fecha_fin || !maquina_id) {
         return res.status(400).json({ error: 'Faltan datos obligatorios' });
     }
+    const usuario_id = usuarioLogueado.id;
     const usuarioEnListaNegra = await ListaNegra.findOne({ where: { usuario_id } });
     if (usuarioEnListaNegra) {
         return res.status(403).json({ error: 'El usuario está en la lista negra y no puede hacer reservas' });
