@@ -133,10 +133,7 @@ const listarMaquinas = async (req, res) => {
     }
 
     const maquinas = await Maquina.findAll({
-      where: {
-    ...whereConditions, // Usamos spread operator para combinar condiciones
-    eliminado: false
-    },
+      where: whereConditions,
       include: [
         includeSucursal,
         {
@@ -276,7 +273,7 @@ const eliminarMaquina = async (req, res) => {
       });
     }
 
-    if (maquina.eliminado) {
+    if (maquina.deletedAt) {
       return res.status(400).json({
         error: "La máquina ya está eliminada",
         detalles: `La máquina con ID ${id} ya fue marcada como eliminada anteriormente`,
@@ -304,7 +301,7 @@ const eliminarMaquina = async (req, res) => {
     }
 
     // Borrado lógico
-    await maquina.update({ eliminado: true, fecha_eliminacion: new Date() });
+    await Maquina.destroy({ where: { id: maquina.id } });
 
     return res.status(200).json({
       success: true,

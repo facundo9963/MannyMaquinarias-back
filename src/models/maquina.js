@@ -97,6 +97,11 @@ module.exports = (sequelize) => {
           },
         },
       },
+      deletedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null,
+      }
     },
     {
       tableName: "maquinas",
