@@ -15,4 +15,6 @@ router.delete("/delete/:id", verificarToken, verificarAdmin, maquinasController.
 
 router.put("/update/:id", verificarToken, verificarAdmin, maquinasController.modificarMaquina);
 
+router.post("/recibir", verificarToken, verificarAdmin, maquinasController.recibirMaquina);
+
 module.exports = router;
