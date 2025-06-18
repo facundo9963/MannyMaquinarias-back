@@ -339,6 +339,29 @@ const obtenerMaquinaPorSerie = async (req, res) => {
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+const entregarMaquina = async (req, res) => {
+  try {
+    const { numeroSerie } = req.body;
+    // Buscar la máquina por numeroSerie
+    const maquina = await Maquina.findOne({ where: { numeroSerie } });
+    if (!maquina) {
+      return res.status(404).json({ error: "Máquina no encontrada" });
+    }
+    // Verificar si la máquina ya está entregada
+    if (maquina.estado === "entregado") {
+      return res.status(400).json({ error: "La máquina ya fue entregada" });
+    }
+    if (maquina.estado !== "disponible") {
+      return res.status(400).json({ error: "La máquina no está disponible para entrega" });
+    }
+    // Actualizar el estado de la máquina a "entregado"
+    await maquina.update({ estado: "entregado" });
+    return res.status(200).json({ message: "Máquina entregada correctamente" });
+  } catch (error) {
+    console.error("Error al entregar la máquina:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+}
 
 const recibirMaquina = async (req, res) => {
   try {
@@ -373,4 +396,5 @@ module.exports = {
   modificarMaquina,
   obtenerMaquinaPorSerie,
   recibirMaquina,
+  entregarMaquina,
 };
