@@ -55,6 +55,49 @@ const obtenerEstadisticasUsuarios = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener estadísticas' });
   }
 };
+
+
+const obtenerEstadisticasMontos = async (req, res) => {
+  try {
+    const fecha_inicio = (req.body.fechaInicio);
+    const fecha_fin = (req.body.fechaFin || Date.now());
+
+    const resultados = await Reserva.findAll({
+      attributes: [
+        [fn('DATE_TRUNC', 'day', col('fecha_reserva')), 'dia'],
+        [fn('SUM', col('precio')), 'montoTotal']
+      ],
+      where: {        
+        fecha_reserva: {
+          [Op.between]: [fecha_inicio, fecha_fin]
+        }
+      },
+      group: [literal('dia')],
+      order: [literal('dia')],
+      raw: true
+    });
+
+    if (resultados.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron reservas en el rango de fechas especificado.' });
+    }
+    // Convertir el día a un formato más legible (opcional)
+    const formateados = resultados.map(r => {
+      const fecha = new Date(r.dia);
+      fecha.setUTCDate(fecha.getUTCDate() + 1); // Ajustar al día siguiente para mostrar correctamente
+
+      return {
+        dia: fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }),
+        montoTotal: Number(r.montoTotal)
+      };
+    });
+    res.json(formateados);
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    res.status(500).json({ error: 'Error al obtener estadísticas' });
+  }
+};
+
 module.exports = {
-    obtenerEstadisticasUsuarios
+    obtenerEstadisticasUsuarios,
+    obtenerEstadisticasMontos
 };
