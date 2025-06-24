@@ -62,6 +62,10 @@ const obtenerEstadisticasMontos = async (req, res) => {
     const fecha_inicio = (req.body.fechaInicio);
     const fecha_fin = (req.body.fechaFin || Date.now());
 
+    if (fecha_fin < fecha_inicio) {
+      return res.status(400).json({ error: 'La fecha de fin no puede ser anterior a la fecha de inicio.' });
+    }
+
     const resultados = await Reserva.findAll({
       attributes: [
         [fn('DATE_TRUNC', 'day', col('fecha_reserva')), 'dia'],
