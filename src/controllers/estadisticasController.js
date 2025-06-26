@@ -11,7 +11,7 @@ const sequelize = require("sequelize");
 
 const obtenerEstadisticasUsuarios = async (req, res) => {
   try {
-    const anio = parseInt(req.body.anio);
+    const anio = parseInt(req.query.anio);
 
     if (isNaN(anio)) {
       return res.status(400).json({ error: 'Año inválido' });
