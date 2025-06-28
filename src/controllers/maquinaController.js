@@ -273,7 +273,7 @@ const eliminarMaquina = async (req, res) => {
       });
     }
 
-    if (maquina.eliminado) {
+    if (maquina.deletedAt) {
       return res.status(400).json({
         error: "La máquina ya está eliminada",
         detalles: `La máquina con ID ${id} ya fue marcada como eliminada anteriormente`,
@@ -301,7 +301,7 @@ const eliminarMaquina = async (req, res) => {
     }
 
     // Borrado lógico
-    await maquina.update({ eliminado: true, fecha_eliminacion: new Date() });
+    await Maquina.destroy({ where: { id: maquina.id } });
 
     return res.status(200).json({
       success: true,
@@ -339,6 +339,55 @@ const obtenerMaquinaPorSerie = async (req, res) => {
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+const entregarMaquina = async (req, res) => {
+  try {
+    const { numeroSerie } = req.body;
+    // Buscar la máquina por numeroSerie
+    const maquina = await Maquina.findOne({ where: { numeroSerie } });
+    if (!maquina) {
+      return res.status(404).json({ error: "Máquina no encontrada" });
+    }
+    // Verificar si la máquina ya está entregada
+    if (maquina.estado === "entregado") {
+      return res.status(400).json({ error: "La máquina ya fue entregada" });
+    }
+    if (maquina.estado !== "disponible") {
+      return res.status(400).json({ error: "La máquina no está disponible para entrega" });
+    }
+    // Actualizar el estado de la máquina a "entregado"
+    await maquina.update({ estado: "entregado" });
+    return res.status(200).json({ message: "Máquina entregada correctamente" });
+  } catch (error) {
+    console.error("Error al entregar la máquina:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+}
+
+const recibirMaquina = async (req, res) => {
+  try {
+    const { numeroSerie } = req.body;
+
+    // Buscar la máquina por numeroSerie
+    const maquina = await Maquina.findOne({ where: { numeroSerie } });
+
+    if (!maquina) {
+      return res.status(404).json({ error: "Máquina no encontrada" });
+    }
+
+    // Verificar si la máquina ya está recibida
+    if (maquina.estado != "entregado") {
+      return res.status(400).json({ error: "La máquina no fue entregada" });
+    }
+
+    // Actualizar el estado de la máquina a "recibida"
+    await maquina.update({ estado: "disponible" });
+
+    return res.status(200).json({ message: "Máquina recibida correctamente" });
+  } catch (error) {
+    console.error("Error al recibir la máquina:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
 
 module.exports = {
   listarMaquinas,
@@ -346,4 +395,6 @@ module.exports = {
   eliminarMaquina,
   modificarMaquina,
   obtenerMaquinaPorSerie,
+  recibirMaquina,
+  entregarMaquina,
 };

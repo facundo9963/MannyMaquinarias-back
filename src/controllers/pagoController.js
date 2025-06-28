@@ -18,7 +18,7 @@ const crearPago = async (req, res) => {
         back_urls: {
           success: 'https://www.youtube.com',//'http://localhost:3001/pagos/success',
           failure: 'http://localhost:3001/pagos/failure',
-          pending: 'http://localhost:3001/pagos/pending',
+          pending: 'https://www.linkedin.com/'//'http://localhost:3001/pagos/pending',
         },
         auto_return: 'approved', // Redirige automáticamente cuando el pago se aprueba
         external_reference: 'pedido_1234', // Para que luego puedas identificar el pago
