@@ -64,6 +64,7 @@ const crearReserva = async (req, res) => {
       precio,
       fecha_inicio,
       fecha_fin,
+      pagada: false,
       usuario_id: usuarioLogueado.id,
       maquina_id,
     });
@@ -85,7 +86,7 @@ const obtenerReservasPropias = async (req, res) => {
         {
           model: db.Maquina,
           as: 'maquina',
-          attributes: ['id', 'nombre'], // Ajustar según tu modelo
+          attributes: ['id', 'nombre', 'pagada'],
         },
       ],
     });

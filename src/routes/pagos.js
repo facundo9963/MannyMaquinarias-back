@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { crearPago, verifyPayment } = require('../controllers/pagoController');
+const { crearPago, pagarReserva } = require('../controllers/pagoController');
+const verificarToken = require('../middlewares/verificarToken');
 
-router.post('/checkout', crearPago);
+router.post('/checkout', verificarToken, crearPago);
+router.post('/webhook', pagarReserva);
 
-router.get('/success', verifyPayment);
-router.get('/failure', verifyPayment);
-router.get('/pending', verifyPayment);
 
 
 module.exports = router;

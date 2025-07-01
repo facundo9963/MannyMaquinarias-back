@@ -63,6 +63,16 @@ module.exports = (sequelize) => {
           },
         },
       },
+      pagada: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+        validate: {
+          isBoolean: {
+            msg: "El campo 'pagada' debe ser un valor booleano",
+          },
+        },
+      },
     },
     {
       tableName: "reservas",
