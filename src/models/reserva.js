@@ -1,4 +1,3 @@
-// models/reserva.js
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
@@ -31,7 +30,7 @@ module.exports = (sequelize) => {
             msg: "Debe proporcionar una fecha de inicio válida",
           },
           isAfterCurrentDate(value) {
-            const hoy = new Date().toISOString().split("T")[0]; // formato YYYY-MM-DD
+            const hoy = new Date().toISOString().split("T")[0];
             if (value <= hoy) {
               throw new Error("La fecha de inicio debe ser futura");
             }
@@ -73,23 +72,20 @@ module.exports = (sequelize) => {
           },
         },
       },
+      eliminado: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+
+      },
     },
     {
       tableName: "reservas",
-      timestamps: false, // Ya tenemos fecha_reserva como equivalente a createdAt
-      paranoid: true, // Para borrado lógico
-      indexes: [
-        {
-          fields: ["fecha_inicio"], // Índice para búsquedas por fecha
-        },
-        {
-          fields: ["fecha_fin"],
-        },
-      ],
+      timestamps: false,
+      indexes: [{ fields: ["fecha_inicio"] }, { fields: ["fecha_fin"] }],
     }
   );
 
-  // Relación con Máquina (asumiendo que una reserva es para una máquina)
   Reserva.associate = (models) => {
     Reserva.belongsTo(models.Maquina, {
       foreignKey: {
@@ -99,7 +95,6 @@ module.exports = (sequelize) => {
       as: "maquina",
     });
 
-    // Si tienes usuarios/clientes que hacen reservas:
     Reserva.belongsTo(models.Usuario, {
       foreignKey: {
         name: "usuario_id",

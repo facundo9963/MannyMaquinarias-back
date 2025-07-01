@@ -10,6 +10,7 @@ const reservasRouter = require("./reservas");
 const politicasCancelacionRouter = require("./politicasCancelacion");
 const pagosRoutes = require("./pagos");
 const sucursalesRouter = require("./sucursales");
+const mantenimientosRouter = require("./mantenimientos");
 const estadisticasRouter = require("./estadisticas");
 
 // Ruta de inicio
@@ -24,8 +25,8 @@ router.get("/", (req, res) => {
       reservas: "/reservas",
       politicasCancelacion: "/politicasCancelacion",
       sucursales: "/sucursales",
+      mantenimientos: "/mantenimientos",
       estadisticas: "/estadisticas",
-
     },
   });
 });
@@ -39,6 +40,7 @@ router.use("/reservas", reservasRouter);
 router.use("/politicasCancelacion", politicasCancelacionRouter);
 router.use("/pagos", pagosRoutes);
 router.use("/sucursales", sucursalesRouter);
+router.use("/mantenimientos", mantenimientosRouter);
 router.use("/estadisticas", estadisticasRouter);
 
 module.exports = router;
