@@ -145,8 +145,40 @@ const obtenerTodasReservas = async (req, res) => {
   }
 };
 
+const historialReservasUsuario = async (req, res) => {
+  const id = req.body.id;
+
+  try {
+    const reservas = await Reserva.findAll({
+      where: {
+        usuario_id: id,
+        eliminado: false, // Solo reservas eliminadas
+        pagada: true, // Solo reservas pagadas
+      },
+      order: [['id']], // Ordenar por ID descendente
+      include: [
+        {
+          model: Maquina,
+          as: 'maquina',
+          attributes: ['id', 'nombre'],
+        },
+      ],
+    });
+
+    if (reservas.length === 0) {
+      return res.status(404).json({ message: "No hay historial de reservas" });
+    }
+
+    res.json(reservas);
+  } catch (error) {
+    console.error("Error al obtener el historial de reservas:", error);
+    res.status(500).json({ error: "Error al obtener el historial de reservas" });
+  }
+}
+
 module.exports = {
   crearReserva,
   obtenerReservasPropias,
   obtenerTodasReservas,
+  historialReservasUsuario,
 };
