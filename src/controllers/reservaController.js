@@ -1,6 +1,7 @@
 const { Reserva, Maquina, Usuario, ListaNegra } = require("../../db");
-const { Op } = require("sequelize");
+const { Op, or } = require("sequelize");
 const db = require("../../db"); // Asegúrate de que este es el camino correcto a tu archivo de configuración de la base de datos
+const { Order } = require("mercadopago");
 
 const crearReserva = async (req, res) => {
   const usuarioLogueado = req.usuarioLogueado;
@@ -116,7 +117,36 @@ const obtenerReservasPropias = async (req, res) => {
   }
 };
 
+const obtenerTodasReservas = async (req, res) => {
+  try {
+    const reservas = await Reserva.findAll({
+      where: { eliminado: false, pagada: true },
+      order: [['id']],
+      include: [
+        {
+          model: Usuario,
+          as: 'usuario',
+          attributes: ['id', 'nombre', 'apellido'],
+        },
+        {
+          model: Maquina,
+          as: 'maquina',
+          attributes: ['id', 'nombre'],
+        },
+      ],
+    });
+    if (reservas.length === 0) {
+      return res.status(404).json({ message: "No hay reservas registradas" });
+    }
+    res.json(reservas);
+  } catch (error) {
+    console.error("Error al obtener todas las reservas:", error);
+    res.status(500).json({ error: "Error al obtener las reservas" });
+  }
+};
+
 module.exports = {
   crearReserva,
   obtenerReservasPropias,
+  obtenerTodasReservas,
 };
