@@ -59,8 +59,8 @@ const obtenerEstadisticasUsuarios = async (req, res) => {
 
 const obtenerEstadisticasMontos = async (req, res) => {
   try {
-    const fecha_inicio = (req.body.fechaInicio);
-    const fecha_fin = (req.body.fechaFin || Date.now());
+    const fecha_inicio = (req.query.fechaInicio);
+    const fecha_fin = (req.query.fechaFin || Date().toISOString().split('T')[0]);
 
     if (fecha_fin < fecha_inicio) {
       return res.status(400).json({ error: 'La fecha de fin no puede ser anterior a la fecha de inicio.' });
