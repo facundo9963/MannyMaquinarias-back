@@ -95,6 +95,14 @@ module.exports = (sequelize) => {
       as: "maquina",
     });
 
+    Reserva.belongsTo(models.Resena, {
+      foreignKey: {
+        name: "resena_id",
+        allowNull: true,
+      },
+    as: "resena",
+    });
+
     Reserva.belongsTo(models.Usuario, {
       foreignKey: {
         name: "usuario_id",

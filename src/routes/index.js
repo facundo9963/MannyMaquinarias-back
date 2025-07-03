@@ -12,6 +12,7 @@ const pagosRoutes = require("./pagos");
 const sucursalesRouter = require("./sucursales");
 const mantenimientosRouter = require("./mantenimientos");
 const estadisticasRouter = require("./estadisticas");
+const resenasRouter = require("./resenas");
 
 // Ruta de inicio
 router.get("/", (req, res) => {
@@ -27,6 +28,7 @@ router.get("/", (req, res) => {
       sucursales: "/sucursales",
       mantenimientos: "/mantenimientos",
       estadisticas: "/estadisticas",
+      reseñas: "/resenas",
     },
   });
 });
@@ -42,5 +44,6 @@ router.use("/pagos", pagosRoutes);
 router.use("/sucursales", sucursalesRouter);
 router.use("/mantenimientos", mantenimientosRouter);
 router.use("/estadisticas", estadisticasRouter);
+router.use("/resenas", resenasRouter);
 
 module.exports = router;
