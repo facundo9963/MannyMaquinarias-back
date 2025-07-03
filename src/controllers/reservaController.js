@@ -25,6 +25,7 @@ const crearReserva = async (req, res) => {
     where: {
       maquina_id,
       eliminado: false, // Solo reservas activas
+      pagada: true, // Solo reservas pagadas
       [Op.or]: [
         // 1. Superposición de fechas
         {
@@ -79,6 +80,7 @@ const crearReserva = async (req, res) => {
       usuario_id: usuarioLogueado.id,
       maquina_id,
       eliminado: false, // La reserva nueva siempre inicia activa
+      pagada: true, // Asumimos que la reserva se crea como pagada
     });
 
     res.status(201).json(nuevaReserva);
