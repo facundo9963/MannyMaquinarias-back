@@ -62,8 +62,9 @@ const crearReserva = async (req, res) => {
   }
 
   const maquina = await Maquina.findByPk(maquina_id);
-  const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
-  if (precio !== maquina.precio * dias) {
+  const dias = Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
+  const precioEsperado = parseFloat((maquina.precio * dias).toFixed(2));
+  if (precio !== precioEsperado) {
     return res.status(400).json({
       error: "El precio no coincide con el precio diario de la máquina",
     });
