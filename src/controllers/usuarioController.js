@@ -1,87 +1,93 @@
 const { Usuario, Rol, Reserva } = require("../../db");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const { Op } = require("sequelize");
+const { enviarEmail } = require("../helpers/emailSender");
 
 const createUser = async (req, res) => {
-  const usuarioLogueado = req.usuarioLogueado;
-  const {
-    dni,
-    nombreUsuario,
-    nombre,
-    apellido,
-    password,
-    email,
-    direccion,
-    edad,
-    rol,
-  } = req.body;
+  const { email, edad, rolCreador } = req.body;
 
   try {
-    const [dniExistente, usuarioExistente, emailExistente] = await Promise.all([
-      Usuario.findOne({ where: { dni } }),
-      Usuario.findOne({ where: { nombreUsuario } }),
-      Usuario.findOne({ where: { email } }),
-    ]);
-
-    if (dniExistente) {
-      return res.status(400).json({ error: "El DNI ya está registrado." });
-    }
-
-    if (usuarioExistente) {
+    // Validar datos obligatorios
+    if (!email || edad === undefined || !rolCreador) {
       return res
         .status(400)
-        .json({ error: "El nombre de usuario ya está en uso." });
+        .json({ error: "Email, edad y rolCreador son obligatorios." });
     }
 
+    // Validar que edad sea un número
+    if (isNaN(edad)) {
+      return res.status(400).json({ error: "La edad debe ser un número." });
+    }
+
+    // Validar que la edad sea mayor a 18
+    if (parseInt(edad) <= 18) {
+      return res
+        .status(400)
+        .json({ error: "La edad debe ser mayor a 18 años." });
+    }
+
+    // Verificar si ya existe un usuario con ese email
+    const emailExistente = await Usuario.findOne({ where: { email } });
     if (emailExistente) {
       return res.status(400).json({ error: "El email ya está registrado." });
     }
 
-    if (
-      !usuarioLogueado ||
-      !usuarioLogueado.rol ||
-      !usuarioLogueado.rol.nombre
-    ) {
-      return res.status(403).json({ error: "No autorizado." });
-    }
+    // Determinar rol a asignar
+    let rolNuevoNombre;
+    const rolCreadorLower = rolCreador.toLowerCase().trim();
 
-    const rolSolicitado = rol || "cliente";
-
-    const rolDB = await Rol.findOne({ where: { nombre: rolSolicitado } });
-
-    if (!rolDB) {
-      return res.status(400).json({ error: "El rol solicitado no existe." });
-    }
-
-    const rolCreador = usuarioLogueado.rol.nombre;
-
-    if (rolCreador === "trabajador" && rolSolicitado !== "cliente") {
+    if (rolCreadorLower === "admin") {
+      rolNuevoNombre = "trabajador";
+    } else if (rolCreadorLower === "trabajador") {
+      rolNuevoNombre = "cliente";
+    } else {
       return res
-        .status(403)
-        .json({ error: "Los trabajadores solo pueden crear clientes." });
+        .status(400)
+        .json({ error: "El rolCreador debe ser 'admin' o 'trabajador'." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Buscar el rol en DB
+    const rolNuevo = await Rol.findOne({ where: { nombre: rolNuevoNombre } });
+    if (!rolNuevo) {
+      return res
+        .status(400)
+        .json({ error: `El rol "${rolNuevoNombre}" no existe.` });
+    }
 
+    // Generar contraseña aleatoria
+    const passwordPlano = crypto.randomBytes(6).toString("base64").slice(0, 10); // 10 caracteres aprox
+
+    // Hashear contraseña
+    const hashedPassword = await bcrypt.hash(passwordPlano, 10);
+
+    // Crear el usuario
     const nuevoUsuario = await Usuario.create({
-      dni,
-      nombreUsuario,
-      nombre,
-      apellido,
-      password: hashedPassword,
       email,
-      direccion,
       edad,
-      rol_id: rolDB.id,
+      password: hashedPassword,
+      rol_id: rolNuevo.id,
     });
 
+    // Enviar email con la contraseña
+    const mensaje = `
+    ¡Ya podés iniciar sesión en la web de MannyMaquinarias!
+
+    Tu contraseña es: ${passwordPlano}
+
+    Te recomendamos cambiarla al iniciar sesión.
+    `;
+
+    await enviarEmail(email, "Bienvenido a MannyMaquinarias", mensaje);
+
     return res.status(201).json({
-      message: "Usuario creado correctamente.",
+      message: `Usuario creado correctamente con rol "${rolNuevoNombre}".`,
       usuario: {
         id: nuevoUsuario.id,
-        nombreUsuario: nuevoUsuario.nombreUsuario,
         email: nuevoUsuario.email,
-        rol: rolDB.nombre,
+        edad: nuevoUsuario.edad,
+        rol: rolNuevo.nombre,
+        passwordGenerada: passwordPlano, // Mostrar solo una vez
       },
     });
   } catch (err) {

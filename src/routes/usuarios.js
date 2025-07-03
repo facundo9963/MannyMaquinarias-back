@@ -6,11 +6,15 @@ const {
   listarInformacionUsuario,
   modificarUsuario,
   verUsuarios,
+  createUser,
 } = require("../controllers/usuarioController");
 const verificarToken = require("../middlewares/verificarToken");
 const verificarAdmin = require("../middlewares/verificarAdmin");
+const verificarTrabajador = require("../middlewares/verificarTrabajador");
 
 router.delete("/eliminar", verificarToken, eliminarUsuario);
+
+router.post("/crear", verificarToken, verificarTrabajador, createUser);
 
 router.delete(
   "/eliminar/:email",
