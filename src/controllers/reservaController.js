@@ -129,7 +129,7 @@ const obtenerTodasReservas = async (req, res) => {
         {
           model: Usuario,
           as: 'usuario',
-          attributes: ['id', 'nombre', 'apellido'],
+          attributes: ['id', 'email', 'apellido'],
         },
         {
           model: Maquina,
@@ -141,6 +141,7 @@ const obtenerTodasReservas = async (req, res) => {
     if (reservas.length === 0) {
       return res.status(404).json({ message: "No hay reservas registradas" });
     }
+
     res.json(reservas);
   } catch (error) {
     console.error("Error al obtener todas las reservas:", error);
@@ -149,17 +150,27 @@ const obtenerTodasReservas = async (req, res) => {
 };
 
 const historialReservasUsuario = async (req, res) => {
-  const id = req.body.id;
-
   try {
+    const email = req.query.email;
+    const usuario = await Usuario.findOne({ where: { email } });
+
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
     const reservas = await Reserva.findAll({
       where: {
-        usuario_id: id,
+        usuario_id: usuario.id,
         eliminado: false, // Solo reservas eliminadas
         pagada: true, // Solo reservas pagadas
       },
       order: [['id']], // Ordenar por ID descendente
       include: [
+        {
+          model: Usuario,
+          as: 'usuario',
+          attributes: ['id', 'email', 'apellido'],
+        },
         {
           model: Maquina,
           as: 'maquina',
@@ -167,6 +178,7 @@ const historialReservasUsuario = async (req, res) => {
         },
       ],
     });
+   
 
     if (reservas.length === 0) {
       return res.status(404).json({ message: "No hay historial de reservas" });
