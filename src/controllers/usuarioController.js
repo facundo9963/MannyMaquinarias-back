@@ -245,7 +245,8 @@ const modificarUsuario = async (req, res) => {
     email,
     direccion,
     edad,
-    password,
+    currentPassword,
+    newPassword 
   } = req.body;
   try {
     // Verificar si el usuario existe
@@ -253,17 +254,29 @@ const modificarUsuario = async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    // Actualizar los campos del usuario
-    usuario.dni = dni || usuario.dni;
-    usuario.nombreUsuario = nombreUsuario || usuario.nombreUsuario;
-    usuario.nombre = nombre || usuario.nombre;
-    usuario.apellido = apellido || usuario.apellido;
-    usuario.email = email || usuario.email;
-    usuario.direccion = direccion || usuario.direccion;
-    usuario.edad = edad || usuario.edad;
-    usuario.password = hashedPassword || usuario.password;
+    
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: "Debes ingresar tu contraseña actual." });
+      }
 
+      const esValida = await bcrypt.compare(currentPassword, usuario.password);
+      if (!esValida) {
+        return res.status(401).json({ error: "Contraseña actual incorrecta." });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      usuario.password = hashedPassword;
+    }
+
+    // Actualizar los campos del usuario
+    usuario.dni = dni ?? usuario.dni;
+    usuario.nombreUsuario = nombreUsuario ?? usuario.nombreUsuario;
+    usuario.nombre = nombre ?? usuario.nombre;
+    usuario.apellido = apellido ?? usuario.apellido;
+    usuario.email = email ?? usuario.email;
+    usuario.direccion = direccion ?? usuario.direccion;
+    usuario.edad = edad ?? usuario.edad;
     await usuario.save();
 
     return res.status(200).json({
