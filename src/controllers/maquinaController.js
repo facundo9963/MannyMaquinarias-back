@@ -181,7 +181,7 @@ const agregarMaquina = async (req, res) => {
 const modificarMaquina = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, marca, modelo, precio, categoria, imageUrl, sucursal_id } =
+    const { numeroSerie,nombre, marca, modelo, precio, categoria, imageUrl, sucursal_id } =
       req.body;
     if (!id || isNaN(id)) {
       return res.status(400).json({ error: "ID de máquina no válido" });
@@ -190,7 +190,9 @@ const modificarMaquina = async (req, res) => {
     if (!maquina) {
       return res.status(404).json({ error: "Máquina no encontrada" });
     }
+    
     const actualizacion = {
+      numeroSerie,
       nombre,
       marca,
       modelo,
@@ -213,6 +215,7 @@ const modificarMaquina = async (req, res) => {
       },
     });
 
+
     if (reservasPendientes.length > 0) {
       return res.status(409).json({
         error: "No se puede modificar la máquina",
@@ -224,12 +227,28 @@ const modificarMaquina = async (req, res) => {
         })),
       });
     }
+
+    if (numeroSerie && numeroSerie !== maquina.numeroSerie) {
+      const existente = await Maquina.findOne({
+        where: {
+          numeroSerie: numeroSerie,
+          id: { [Op.ne]: id },
+        },
+      });
+      if (existente) {
+        return res.status(409).json({
+          error: "Ese número de serie ya está asignado a otra máquina",
+        });
+      }
+    }
     // Validar que el precio sea un número positivo
     if (precio !== undefined && (isNaN(precio) || precio < 0)) {
       return res
         .status(400)
         .json({ error: "El precio debe ser un número positivo" });
     }
+    
+    
     // Actualizar la máquina
     await maquina.update(actualizacion);
     return res.status(200).json({
@@ -237,7 +256,7 @@ const modificarMaquina = async (req, res) => {
       message: "Máquina actualizada correctamente",
       data: {
         id: maquina.id,
-        numeroSerie: maquina.numeroSerie,
+        numeroSerie: numeroSerie ?? maquina.numeroSerie,
         nombre: maquina.nombre,
         marca: maquina.marca,
         modelo: maquina.modelo,
