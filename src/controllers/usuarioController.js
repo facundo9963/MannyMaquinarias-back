@@ -246,30 +246,43 @@ const modificarUsuario = async (req, res) => {
     direccion,
     edad,
     currentPassword,
-    newPassword 
+    newPassword,
   } = req.body;
+
   try {
-    // Verificar si el usuario existe
     const usuario = await Usuario.findByPk(usuarioLogueado.id);
+
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
-    
-    if (newPassword) {
-      if (!currentPassword) {
-        return res.status(400).json({ error: "Debes ingresar tu contraseña actual." });
+
+    if (newPassword?.trim().length > 0) {
+      if (!currentPassword || typeof currentPassword !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Debes ingresar tu contraseña actual." });
       }
 
       const esValida = await bcrypt.compare(currentPassword, usuario.password);
       if (!esValida) {
-        return res.status(401).json({ error: "Contraseña actual incorrecta." });
+        return res
+          .status(401)
+          .json({ error: "Contraseña actual incorrecta." });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       usuario.password = hashedPassword;
     }
 
-    // Actualizar los campos del usuario
+    if (dni && dni !== usuario.dni) {
+      const existeDni = await Usuario.findOne({ where: { dni } });
+      if (existeDni) {
+        return res
+          .status(409)
+          .json({ error: "El DNI ya está en uso por otro usuario." });
+      }
+    }
+
     usuario.dni = dni ?? usuario.dni;
     usuario.nombreUsuario = nombreUsuario ?? usuario.nombreUsuario;
     usuario.nombre = nombre ?? usuario.nombre;
@@ -277,6 +290,7 @@ const modificarUsuario = async (req, res) => {
     usuario.email = email ?? usuario.email;
     usuario.direccion = direccion ?? usuario.direccion;
     usuario.edad = edad ?? usuario.edad;
+
     await usuario.save();
 
     return res.status(200).json({
@@ -289,9 +303,17 @@ const modificarUsuario = async (req, res) => {
     });
   } catch (err) {
     console.error("Error en modificarUsuario:", err);
+
+    if (err.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({
+        error: "El DNI ya está en uso.",
+      });
+    }
+
     return res.status(500).json({ error: "Error interno del servidor." });
   }
 };
+
 
 const verUsuarios = async (req, res) => {
   const { rol } = req.body;
