@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const maquinasController = require("../controllers/maquinaController");
 const verificarAdmin = require("../middlewares/verificarAdmin");
+const verificarTrabajador = require("../middlewares/verificarTrabajador");
 const verificarToken = require("../middlewares/verificarToken");
 
 // GET /maquinas
@@ -15,7 +16,8 @@ router.delete("/delete/:id", verificarToken, verificarAdmin, maquinasController.
 
 router.put("/update/:id", verificarToken, verificarAdmin, maquinasController.modificarMaquina);
 
-router.post("/recibir", verificarToken, verificarAdmin, maquinasController.recibirMaquina);
-router.post("/entregar", verificarToken, verificarAdmin, maquinasController.entregarMaquina);
+router.post("/recibir", verificarToken, verificarTrabajador, maquinasController.recibirMaquina);
+
+router.post("/entregar", verificarToken, verificarTrabajador, maquinasController.entregarMaquina);
 
 module.exports = router;

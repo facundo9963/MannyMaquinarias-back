@@ -101,7 +101,30 @@ const obtenerEstadisticasMontos = async (req, res) => {
   }
 };
 
+const obtenerPorcentajePorCategoria = async (req, res) => {
+  try {
+    const categorias = await Maquina.findAll({
+      attributes: ['categoria', [fn('COUNT', col('id')), 'cantidad']],
+      group: 'categoria',
+      raw: true
+    });
+
+    const total = categorias.reduce((sum, categoria) => sum + categoria.cantidad, 0);
+    const cantidad = await Maquina.count();
+    const porcentajes = categorias.map(categoria => ({
+      categoria: categoria.categoria,
+      porcentaje: ((categoria.cantidad / cantidad) * 100)
+    }));
+
+    res.json(porcentajes);
+  } catch (error) {
+    console.error('Error al obtener porcentajes por categoría:', error);
+    res.status(500).json({ error: 'Error al obtener porcentajes por categoría' });
+  }
+}
+
 module.exports = {
     obtenerEstadisticasUsuarios,
-    obtenerEstadisticasMontos
+    obtenerEstadisticasMontos,
+    obtenerPorcentajePorCategoria,
 };

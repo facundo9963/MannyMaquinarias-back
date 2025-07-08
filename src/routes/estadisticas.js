@@ -9,4 +9,6 @@ router.get("/users", verificarToken, verificarAdmin, estadisticasController.obte
 
 router.get("/montos", verificarToken, verificarAdmin, estadisticasController.obtenerEstadisticasMontos);
 
+router.get("/categorias", verificarToken, verificarAdmin, estadisticasController.obtenerPorcentajePorCategoria);
+
 module.exports = router;
