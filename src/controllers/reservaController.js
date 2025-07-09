@@ -3,6 +3,7 @@ const { Op, or } = require("sequelize");
 const db = require("../../db"); // Asegúrate de que este es el camino correcto a tu archivo de configuración de la base de datos
 const { Order } = require("mercadopago");
 const usuario = require("../models/usuario");
+const { parse } = require("dotenv");
 
 const crearReserva = async (req, res) => {
   const usuarioLogueado = req.usuarioLogueado;
@@ -195,10 +196,16 @@ const historialReservasUsuario = async (req, res) => {
 }
 
 const cancelarReserva = async (req, res) => {
-  const { reservaId } = req.query;
+  const reservaId  = req.body.reservaId; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
   const usuarioLogueado = req.usuarioLogueado;
 
   try {
+    if (!reservaId) {
+      return res.status(400).json({ error: "ID de reserva es obligatorio" });
+    }
+    if (isNaN(reservaId)) {
+      return res.status(400).json({ error: "ID de reserva debe ser un número" });
+    }
     const reserva = await Reserva.findOne({
       where: { id: reservaId, usuario_id: usuarioLogueado.id, eliminado: false },
     });
@@ -206,13 +213,27 @@ const cancelarReserva = async (req, res) => {
     if (!reserva) {
       return res.status(404).json({ error: "Reserva no encontrada" });
     }
-    const politicaCancelacion = PoliticaCancelacion.findbyPk(reserva.politica_cancelacion_id);
+    const maquina = await Maquina.findByPk(reserva.maquina_id);
+    if (!maquina) {
+      return res.status(404).json({ error: "Máquina no encontrada" });
+    }
+    const politicaCancelacion = await PoliticaCancelacion.findByPk(maquina.politica_cancelacion_id);
     if (!politicaCancelacion) {
       return res.status(404).json({ error: "Política de cancelación no encontrada" });
     }
-    usuarioLogueado.monto += ((politicaCancelacion.porcentajeReembolso/100.0) * reserva.precio); // Devolver el monto al usuario
-    await usuarioLogueado.save();
-    reserva.precio = ((100.0-politicaCancelacion.porcentajeReembolso)/100.0) * reserva.precio; // Ajustar el precio de la reserva   
+    const porcentaje = politicaCancelacion.porcentajeRembolso;
+    const precioReserva = reserva.precio;
+    if (isNaN(porcentaje) || isNaN(precioReserva)) {
+      return res.status(400).json({ error: "Datos de política de cancelación inválidos" });
+    }
+    const usuario = await Usuario.findByPk(usuarioLogueado.id);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    const montoDevolver = parseFloat(usuario.monto);
+    usuario.monto = montoDevolver + (porcentaje / 100.0) * precioReserva;
+    await usuario.save();
+    reserva.precio = ((100.0-porcentaje)/100.00) * precioReserva; // Ajustar el precio de la reserva   
     reserva.eliminado = true;
     await reserva.save();
 

@@ -85,20 +85,15 @@ module.exports = (sequelize) => {
         },
       },
       monto: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
-        defaultValue: 0.0,
+        defaultValue: 0.00,
         validate: {
-          isFloat: {
-            msg: "El monto debe ser un número decimal",
+          isDecimal: {
+            msg: "El precio debe ser un número decimal",
           },
-          isNotNaN(value) {
-            if (isNaN(value)) {
-              throw new Error("El monto no puede ser NaN");
-            }
-          }
         },
-      }
+      },
     },
     {
       tableName: "usuarios",
