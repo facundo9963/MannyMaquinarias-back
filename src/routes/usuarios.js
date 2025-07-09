@@ -7,6 +7,7 @@ const {
   modificarUsuario,
   verUsuarios,
   createUser,
+  obtenerMonto,
 } = require("../controllers/usuarioController");
 const verificarToken = require("../middlewares/verificarToken");
 const verificarAdmin = require("../middlewares/verificarAdmin");
@@ -28,5 +29,11 @@ router.get("/rol", verificarToken, verificarAdmin, verUsuarios);
 router.get("/", verificarToken, listarInformacionUsuario);
 
 router.put("/update", verificarToken, modificarUsuario);
+
+router.get(
+  "/monto",
+  verificarToken,
+  obtenerMonto
+);
 
 module.exports = router;

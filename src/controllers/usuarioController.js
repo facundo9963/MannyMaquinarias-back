@@ -220,7 +220,7 @@ const listarInformacionUsuario = async (req, res) => {
     }
 
     const usuario = await Usuario.findByPk(usuarioLogueado.id, {
-      attributes: ["dni", "nombre", "apellido", "email", "direccion", "edad"],
+      attributes: ["dni", "nombre", "apellido", "email", "direccion", "edad", "monto"],
       include: [
         {
           model: Rol,
@@ -340,6 +340,7 @@ const verUsuarios = async (req, res) => {
           "email",
           "direccion",
           "edad",
+          "monto",
         ],
         include: [
           {
@@ -360,6 +361,7 @@ const verUsuarios = async (req, res) => {
           "email",
           "direccion",
           "edad",
+          "monto",
         ],
         include: [
           {
@@ -380,6 +382,30 @@ const verUsuarios = async (req, res) => {
     return res.status(500).json({ error: "Error interno del servidor." });
   }
 };
+
+const obtenerMonto = async (req, res) => {
+  const usuarioLogueado = req.usuarioLogueado;
+
+  if (!usuarioLogueado) {
+    return res.status(403).json({ error: "No autorizado." });
+  }
+
+  try {
+    const usuario = await Usuario.findByPk(usuarioLogueado.id, {
+      attributes: ["monto"],
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    return res.status(200).json({ monto: usuario.monto });
+  } catch (error) {
+    console.error("Error al obtener el monto del usuario:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
 module.exports = {
   createUser,
   eliminarUsuario,
@@ -387,4 +413,5 @@ module.exports = {
   listarInformacionUsuario,
   modificarUsuario,
   verUsuarios,
+  obtenerMonto,
 };

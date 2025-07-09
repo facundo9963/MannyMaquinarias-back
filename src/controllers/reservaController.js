@@ -196,7 +196,7 @@ const historialReservasUsuario = async (req, res) => {
 }
 
 const cancelarReserva = async (req, res) => {
-  const reservaId  = req.body.reservaId; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
+  const reservaId  = req.body.reservaId || req.query.reservaId; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
   const usuarioLogueado = req.usuarioLogueado;
 
   try {
@@ -334,6 +334,34 @@ const crearReservaEmpleado = async (req, res) => {
   }
 };
 
+const eliminarReserva = async (req, res) => {
+  const { reservaId } = req.body.reservaId || req.query; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
+  const reserva = await Reserva.findByPk(reservaId);
+  if (!reserva) {
+    return res.status(404).json({ error: "Reserva no encontrada" });
+  }
+  if (reserva.eliminado) {
+    return res.status(400).json({ error: "La reserva ya está eliminada" });
+  }
+  try {
+    const usuario = await Usuario.findByPk(reserva.usuario_id);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    const montoDevolver = parseFloat(usuario.monto);
+    const precioReserva = parseFloat(reserva.precio); // Precio de la reserva
+    usuario.monto = montoDevolver + precioReserva; // Devolver el monto al usuario
+    await usuario.save(); // Guardar los cambios en el usuario
+    reserva.eliminado = true; // Marcar la reserva como eliminada
+    reserva.precio = 0; // Ajustar el precio de la reserva a 0
+    await reserva.save();
+    res.json({ message: "Reserva eliminada exitosamente" });
+  } catch (error) {
+    console.error("Error al eliminar la reserva:", error);
+    res.status(500).json({ error: "Error al eliminar la reserva" });
+  }
+}
+
 
 module.exports = {
   crearReserva,
@@ -341,5 +369,6 @@ module.exports = {
   obtenerTodasReservas,
   historialReservasUsuario,
   cancelarReserva,
-  crearReservaEmpleado
+  crearReservaEmpleado,
+  eliminarReserva,
 };
