@@ -362,6 +362,45 @@ const eliminarReserva = async (req, res) => {
   }
 }
 
+const obtenerReservasPorFecha = async (req, res) => {
+  const { fecha_inicio, fecha_fin } = req.query;
+
+  if (!fecha_inicio || !fecha_fin) {
+    return res.status(400).json({ error: "Faltan parámetros de fecha" });
+  }
+
+  try {
+    const reservas = await Reserva.findAll({
+      where: {
+        fecha_inicio: { [Op.gte]: new Date(fecha_inicio) },
+        fecha_fin: { [Op.lte]: new Date(fecha_fin) },
+        eliminado: false,
+        pagada: true,
+      },
+      include: [
+        {
+          model: Usuario,
+          as: 'usuario',
+          attributes: ['id', 'email', 'apellido'],
+        },
+        {
+          model: Maquina,
+          as: 'maquina',
+          attributes: ['id', 'nombre'],
+        },
+      ],
+    });
+
+    if (reservas.length === 0) {
+      return res.status(404).json({ message: "No se encontraron reservas en el rango de fechas especificado" });
+    }
+
+    res.json(reservas);
+  } catch (error) {
+    console.error("Error al obtener reservas por fecha:", error);
+    res.status(500).json({ error: "Error al obtener las reservas por fecha" });
+  }
+}
 
 module.exports = {
   crearReserva,
@@ -371,4 +410,5 @@ module.exports = {
   cancelarReserva,
   crearReservaEmpleado,
   eliminarReserva,
+  obtenerReservasPorFecha,
 };
