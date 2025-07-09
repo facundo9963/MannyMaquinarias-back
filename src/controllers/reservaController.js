@@ -245,9 +245,6 @@ const cancelarReserva = async (req, res) => {
 };
 
 const crearReservaEmpleado = async (req, res) => {
-  console.log('Email recibido en body:', req.body.email);
-console.log('Usuario autenticado:', req.usuario?.email);
-
   const { email, precio, fecha_inicio, fecha_fin, maquina_id } = req.body;
     if (!email || !precio || !fecha_inicio || !fecha_fin || !maquina_id) {
     return res.status(400).json({ error: "Faltan datos obligatorios" });
