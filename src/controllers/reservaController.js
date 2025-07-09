@@ -245,6 +245,9 @@ const cancelarReserva = async (req, res) => {
 };
 
 const crearReservaEmpleado = async (req, res) => {
+  console.log('Email recibido en body:', req.body.email);
+console.log('Usuario autenticado:', req.usuario?.email);
+
   const { email, precio, fecha_inicio, fecha_fin, maquina_id } = req.body;
     if (!email || !precio || !fecha_inicio || !fecha_fin || !maquina_id) {
     return res.status(400).json({ error: "Faltan datos obligatorios" });
@@ -372,11 +375,13 @@ const obtenerReservasPorFecha = async (req, res) => {
   try {
     const reservas = await Reserva.findAll({
       where: {
-        fecha_inicio: { [Op.gte]: new Date(fecha_inicio) },
-        fecha_fin: { [Op.lte]: new Date(fecha_fin) },
+        [Op.and]: [
+          { fecha_inicio: { [Op.lte]: new Date(fecha_fin) } },  // Empieza antes de que termine el rango
+          { fecha_fin: { [Op.gte]: new Date(fecha_inicio) } },  // Termina después de que empiece el rango
+        ],
         eliminado: false,
         pagada: true,
-      },
+      },  
       include: [
         {
           model: Usuario,
