@@ -10,5 +10,6 @@ router.get('/', verificarToken, obtenerReservasPropias);
 router.get('/all', verificarToken, verificarTrabajador, obtenerTodasReservas);
 router.get('/historial', verificarToken, verificarTrabajador, historialReservasUsuario); // Asumiendo que esta ruta es para el historial de reservas del usuario logueado
 router.delete('/cancelar', verificarToken, cancelarReserva); // Asumiendo que la función cancelarReserva está exportada correctamente
+router.post('/agregar', verificarToken, verificarTrabajador, crearReserva); // Ruta para crear reservas como empleado
 
 module.exports = router;
