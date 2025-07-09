@@ -373,7 +373,9 @@ const entregarMaquina = async (req, res) => {
     }
     if (maquina.estado !== "disponible") {
       const user = await Usuario.findByPk(reserva.usuario_id);
-      user.monto += reserva.precio; // Devolver el monto al usuario
+      const monto = parseFloat(user.monto); // Devolver el monto al usuario
+      precioReserva = parseFloat(reserva.precio); // Precio de la reserva
+      user.monto = monto + precioReserva; // Actualizar el monto del usuario
       await user.save();
       reserva.precio = 0; // Ajustar el precio de la reserva a 0
       reserva.eliminado = true;
@@ -414,10 +416,12 @@ const recibirMaquina = async (req, res) => {
       (new Date() - new Date(reserva.fecha_fin)) / (1000 * 60 * 60 * 24)
     );
     if (diasAtraso > 0) {
-      const aPagar = reserva.precio * diasAtraso;
-      user.monto -= aPagar; // Restar el monto al usuario
+      const monto = parseFloat(user.monto); // Devolver el monto al usuario
+      const precioReserva = parseFloat(reserva.precio); // Precio de la reserva
+      const aPagar = precioReserva * diasAtraso;
+      user.monto = monto - aPagar; // Restar el monto al usuario
       await user.save();
-      reserva.precio += aPagar; // Ajustar el precio de la reserva
+      reserva.precio = precioReserva + aPagar; // Ajustar el precio de la reserva
       await reserva.save();
     }
 
