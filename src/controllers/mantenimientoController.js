@@ -1,7 +1,6 @@
-const { Maquina, Mantenimiento, Reserva } = require("../../db");
+const { Maquina, Mantenimiento, Reserva, Usuario } = require("../../db");
 const { Op } = require("sequelize");
 
-// Poner una máquina en mantenimiento
 const startMantenimiento = async (req, res) => {
   const { id } = req.params;
   const { nombre, detalle, fechaFin } = req.body;
@@ -33,11 +32,11 @@ const startMantenimiento = async (req, res) => {
       });
     }
 
-    // Cambiar estado
+    // Cambiar estado de la máquina
     maquina.estado = "en mantenimiento";
     await maquina.save();
 
-    // Crear mantenimiento con fechaFin
+    // Crear el mantenimiento
     const mantenimiento = await Mantenimiento.create({
       nombre,
       detalle,
@@ -46,30 +45,47 @@ const startMantenimiento = async (req, res) => {
       maquina_id: maquina.id,
     });
 
-    // Buscar y marcar reservas como eliminadas
+    // Buscar reservas activas que se superponen con el mantenimiento
     const reservas = await Reserva.findAll({
       where: {
         maquina_id: maquina.id,
         fecha_inicio: {
-          [Op.lte]: fechaFin,
+          [Op.lte]: parsedFechaFin,
         },
-        eliminado: false, // solo reservas activas
+        eliminado: false,
       },
     });
 
+    const reservasCanceladas = [];
+
     for (const reserva of reservas) {
-      await reserva.update({ eliminado: true });
+      // Buscar al usuario
+      const usuario = await Usuario.findByPk(reserva.usuario_id);
+      if (usuario) {
+        const montoActual = parseFloat(usuario.monto) || 0;
+        const precioReserva = parseFloat(reserva.precio) || 0;
+        usuario.monto = (montoActual + precioReserva).toFixed(2); // mantener decimal
+        await usuario.save();
+      }
+
+      // Cancelar la reserva y dejar constancia
+      await reserva.update({
+        eliminado: true,
+        precio: 0,
+      });
+
+      reservasCanceladas.push({
+        id: reserva.id,
+        fecha_inicio: reserva.fecha_inicio,
+        fecha_fin: reserva.fecha_fin,
+      });
     }
 
     res.status(200).json({
       message: "Máquina puesta en mantenimiento y reservas canceladas.",
       maquina,
       mantenimiento,
-      reservasCanceladas: reservas.map((r) => ({
-        id: r.id,
-        fecha_inicio: r.fecha_inicio,
-        fecha_fin: r.fecha_fin,
-      })),
+      reservasCanceladas,
     });
   } catch (error) {
     console.error("Error al poner la máquina en mantenimiento:", error);
