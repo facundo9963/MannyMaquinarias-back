@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   agregarUsuarioAListaNegra,
   obtenerUsuariosListaNegra,
+  eliminarUsuarioDeListaNegra,
 } = require("../controllers/listaNegraController");
 
 const verificarAdmin = require("../middlewares/verificarAdmin");
@@ -15,5 +16,12 @@ router.post(
 );
 
 router.get("/", verificarToken, verificarAdmin, obtenerUsuariosListaNegra);
+
+router.delete(
+  "/:email",
+  verificarToken,
+  verificarAdmin,
+  eliminarUsuarioDeListaNegra
+);
 
 module.exports = router;
