@@ -385,24 +385,15 @@ const verUsuarios = async (req, res) => {
 
 const obtenerMonto = async (req, res) => {
   const usuarioLogueado = req.usuarioLogueado;
-  const emailCliente = req.query.email;
 
   if (!usuarioLogueado) {
     return res.status(403).json({ error: "No autorizado." });
   }
 
   try {
-    let usuario;
-    if (usuarioLogueado.rol === "trabajador" && emailCliente) {
-      usuario = await Usuario.findOne({
-        where: { email: emailCliente },
-        attributes: ["monto"],
-      });
-    } else {
-      usuario = await Usuario.findByPk(usuarioLogueado.id, {
-        attributes: ["monto"],
-      });
-    }
+    const usuario = await Usuario.findByPk(usuarioLogueado.id, {
+      attributes: ["monto"],
+    });
 
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado." });
@@ -414,6 +405,33 @@ const obtenerMonto = async (req, res) => {
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+
+
+const obtenerMontoEmpleado = async (req, res) => {
+  const { email } = req.query;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email del cliente requerido." });
+  }
+
+  try {
+    const usuario = await Usuario.findOne({
+      where: { email },
+      attributes: ["monto", "email"],
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Cliente no encontrado." });
+    }
+
+    return res.status(200).json({ monto: usuario.monto, email: usuario.email });
+  } catch (error) {
+    console.error("Error al obtener el monto del cliente:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+
 
 const resetearMonto = async (req, res) => {
   const { email } = req.body;
@@ -439,8 +457,6 @@ const resetearMonto = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
   createUser,
   eliminarUsuario,
@@ -449,5 +465,6 @@ module.exports = {
   modificarUsuario,
   verUsuarios,
   obtenerMonto,
+  obtenerMontoEmpleado,
   resetearMonto,
 };
