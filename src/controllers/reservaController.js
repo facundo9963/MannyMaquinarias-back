@@ -33,7 +33,7 @@ const crearReserva = async (req, res) => {
     where: {
       maquina_id,
       eliminado: false, // Solo reservas activas
-      pagada: true, // Solo reservas pagadas
+      pagada: false, // Solo reservas pagadas
       [Op.or]: [
         // 1. Superposición de fechas
         {
@@ -131,7 +131,7 @@ const obtenerReservasPropias = async (req, res) => {
 const obtenerTodasReservas = async (req, res) => {
   try {
     const reservas = await Reserva.findAll({
-      where: { eliminado: false, pagada: true },
+      where: { eliminado: false, pagada: true }, // Solo reservas activas y pagadas
       order: [["id"]],
       include: [
         {
