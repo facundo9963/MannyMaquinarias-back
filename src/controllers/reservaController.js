@@ -1,4 +1,10 @@
-const { Reserva, Maquina, Usuario, ListaNegra, PoliticaCancelacion } = require("../../db");
+const {
+  Reserva,
+  Maquina,
+  Usuario,
+  ListaNegra,
+  PoliticaCancelacion,
+} = require("../../db");
 const { Op, or } = require("sequelize");
 const db = require("../../db"); // Asegúrate de que este es el camino correcto a tu archivo de configuración de la base de datos
 const { Order } = require("mercadopago");
@@ -103,8 +109,8 @@ const obtenerReservasPropias = async (req, res) => {
       include: [
         {
           model: db.Maquina,
-          as: 'maquina',
-          attributes: ['id', 'nombre'], // Ajustar según tu modelo
+          as: "maquina",
+          attributes: ["id", "nombre"], // Ajustar según tu modelo
         },
       ],
     });
@@ -126,17 +132,17 @@ const obtenerTodasReservas = async (req, res) => {
   try {
     const reservas = await Reserva.findAll({
       where: { eliminado: false, pagada: true },
-      order: [['id']],
+      order: [["id"]],
       include: [
         {
           model: Usuario,
-          as: 'usuario',
-          attributes: ['id', 'email', 'apellido'],
+          as: "usuario",
+          attributes: ["id", "email", "apellido"],
         },
         {
           model: Maquina,
-          as: 'maquina',
-          attributes: ['id', 'nombre'],
+          as: "maquina",
+          attributes: ["id", "nombre"],
         },
       ],
     });
@@ -150,8 +156,6 @@ const obtenerTodasReservas = async (req, res) => {
     res.status(500).json({ error: "Error al obtener las reservas" });
   }
 };
-
-
 
 const historialReservasUsuario = async (req, res) => {
   try {
@@ -168,21 +172,20 @@ const historialReservasUsuario = async (req, res) => {
         eliminado: false, // Solo reservas eliminadas
         pagada: true, // Solo reservas pagadas
       },
-      order: [['id']], // Ordenar por ID descendente
+      order: [["id"]], // Ordenar por ID descendente
       include: [
         {
           model: Usuario,
-          as: 'usuario',
-          attributes: ['id', 'email', 'apellido'],
+          as: "usuario",
+          attributes: ["id", "email", "apellido"],
         },
         {
           model: Maquina,
-          as: 'maquina',
-          attributes: ['id', 'nombre'],
+          as: "maquina",
+          attributes: ["id", "nombre"],
         },
       ],
     });
-   
 
     if (reservas.length === 0) {
       return res.status(404).json({ message: "No hay historial de reservas" });
@@ -191,12 +194,14 @@ const historialReservasUsuario = async (req, res) => {
     res.json(reservas);
   } catch (error) {
     console.error("Error al obtener el historial de reservas:", error);
-    res.status(500).json({ error: "Error al obtener el historial de reservas" });
+    res
+      .status(500)
+      .json({ error: "Error al obtener el historial de reservas" });
   }
-}
+};
 
 const cancelarReserva = async (req, res) => {
-  const reservaId  = req.body.reservaId || req.query.reservaId; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
+  const reservaId = req.body.reservaId || req.query.reservaId; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
   const usuarioLogueado = req.usuarioLogueado;
 
   try {
@@ -204,10 +209,16 @@ const cancelarReserva = async (req, res) => {
       return res.status(400).json({ error: "ID de reserva es obligatorio" });
     }
     if (isNaN(reservaId)) {
-      return res.status(400).json({ error: "ID de reserva debe ser un número" });
+      return res
+        .status(400)
+        .json({ error: "ID de reserva debe ser un número" });
     }
     const reserva = await Reserva.findOne({
-      where: { id: reservaId, usuario_id: usuarioLogueado.id, eliminado: false },
+      where: {
+        id: reservaId,
+        usuario_id: usuarioLogueado.id,
+        eliminado: false,
+      },
     });
 
     if (!reserva) {
@@ -217,14 +228,20 @@ const cancelarReserva = async (req, res) => {
     if (!maquina) {
       return res.status(404).json({ error: "Máquina no encontrada" });
     }
-    const politicaCancelacion = await PoliticaCancelacion.findByPk(maquina.politica_cancelacion_id);
+    const politicaCancelacion = await PoliticaCancelacion.findByPk(
+      maquina.politica_cancelacion_id
+    );
     if (!politicaCancelacion) {
-      return res.status(404).json({ error: "Política de cancelación no encontrada" });
+      return res
+        .status(404)
+        .json({ error: "Política de cancelación no encontrada" });
     }
     const porcentaje = politicaCancelacion.porcentajeRembolso;
     const precioReserva = reserva.precio;
     if (isNaN(porcentaje) || isNaN(precioReserva)) {
-      return res.status(400).json({ error: "Datos de política de cancelación inválidos" });
+      return res
+        .status(400)
+        .json({ error: "Datos de política de cancelación inválidos" });
     }
     const usuario = await Usuario.findByPk(usuarioLogueado.id);
     if (!usuario) {
@@ -233,7 +250,7 @@ const cancelarReserva = async (req, res) => {
     const montoDevolver = parseFloat(usuario.monto);
     usuario.monto = montoDevolver + (porcentaje / 100.0) * precioReserva;
     await usuario.save();
-    reserva.precio = ((100.0-porcentaje)/100.00) * precioReserva; // Ajustar el precio de la reserva   
+    reserva.precio = ((100.0 - porcentaje) / 100.0) * precioReserva; // Ajustar el precio de la reserva
     reserva.eliminado = true;
     await reserva.save();
 
@@ -246,7 +263,7 @@ const cancelarReserva = async (req, res) => {
 
 const crearReservaEmpleado = async (req, res) => {
   const { email, precio, fecha_inicio, fecha_fin, maquina_id } = req.body;
-    if (!email || !precio || !fecha_inicio || !fecha_fin || !maquina_id) {
+  if (!email || !precio || !fecha_inicio || !fecha_fin || !maquina_id) {
     return res.status(400).json({ error: "Faltan datos obligatorios" });
   }
   const usuario = await Usuario.findOne({ where: { email } });
@@ -335,7 +352,7 @@ const crearReservaEmpleado = async (req, res) => {
 };
 
 const eliminarReserva = async (req, res) => {
-  const { reservaId } = req.body.reservaId || req.query; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
+  const reservaId = req.body.reservaId || req.query; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
   const reserva = await Reserva.findByPk(reservaId);
   if (!reserva) {
     return res.status(404).json({ error: "Reserva no encontrada" });
@@ -360,7 +377,7 @@ const eliminarReserva = async (req, res) => {
     console.error("Error al eliminar la reserva:", error);
     res.status(500).json({ error: "Error al eliminar la reserva" });
   }
-}
+};
 
 const obtenerReservasPorFecha = async (req, res) => {
   const { fecha_inicio, fecha_fin } = req.query;
@@ -373,28 +390,31 @@ const obtenerReservasPorFecha = async (req, res) => {
     const reservas = await Reserva.findAll({
       where: {
         [Op.and]: [
-          { fecha_inicio: { [Op.lte]: new Date(fecha_fin) } },  // Empieza antes de que termine el rango
-          { fecha_fin: { [Op.gte]: new Date(fecha_inicio) } },  // Termina después de que empiece el rango
+          { fecha_inicio: { [Op.lte]: new Date(fecha_fin) } }, // Empieza antes de que termine el rango
+          { fecha_fin: { [Op.gte]: new Date(fecha_inicio) } }, // Termina después de que empiece el rango
         ],
         eliminado: false,
         pagada: true,
-      },  
+      },
       include: [
         {
           model: Usuario,
-          as: 'usuario',
-          attributes: ['id', 'email', 'apellido'],
+          as: "usuario",
+          attributes: ["id", "email", "apellido"],
         },
         {
           model: Maquina,
-          as: 'maquina',
-          attributes: ['id', 'nombre'],
+          as: "maquina",
+          attributes: ["id", "nombre"],
         },
       ],
     });
 
     if (reservas.length === 0) {
-      return res.status(404).json({ message: "No se encontraron reservas en el rango de fechas especificado" });
+      return res.status(404).json({
+        message:
+          "No se encontraron reservas en el rango de fechas especificado",
+      });
     }
 
     res.json(reservas);
@@ -402,7 +422,7 @@ const obtenerReservasPorFecha = async (req, res) => {
     console.error("Error al obtener reservas por fecha:", error);
     res.status(500).json({ error: "Error al obtener las reservas por fecha" });
   }
-}
+};
 
 module.exports = {
   crearReserva,
