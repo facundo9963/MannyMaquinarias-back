@@ -8,6 +8,7 @@ const {
   verUsuarios,
   createUser,
   obtenerMonto,
+  resetearMonto,
 } = require("../controllers/usuarioController");
 const verificarToken = require("../middlewares/verificarToken");
 const verificarAdmin = require("../middlewares/verificarAdmin");
@@ -35,5 +36,6 @@ router.get(
   verificarToken,
   obtenerMonto
 );
+router.put('/resetear-monto', verificarToken, verificarTrabajador, resetearMonto);
 
 module.exports = router;

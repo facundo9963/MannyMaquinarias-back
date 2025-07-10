@@ -385,15 +385,24 @@ const verUsuarios = async (req, res) => {
 
 const obtenerMonto = async (req, res) => {
   const usuarioLogueado = req.usuarioLogueado;
+  const emailCliente = req.query.email;
 
   if (!usuarioLogueado) {
     return res.status(403).json({ error: "No autorizado." });
   }
 
   try {
-    const usuario = await Usuario.findByPk(usuarioLogueado.id, {
-      attributes: ["monto"],
-    });
+    let usuario;
+    if (usuarioLogueado.rol === "trabajador" && emailCliente) {
+      usuario = await Usuario.findOne({
+        where: { email: emailCliente },
+        attributes: ["monto"],
+      });
+    } else {
+      usuario = await Usuario.findByPk(usuarioLogueado.id, {
+        attributes: ["monto"],
+      });
+    }
 
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado." });
@@ -406,6 +415,32 @@ const obtenerMonto = async (req, res) => {
   }
 };
 
+const resetearMonto = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email requerido" });
+  }
+
+  try {
+    const usuario = await Usuario.findOne({ where: { email } });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    usuario.monto = 0;
+    await usuario.save();
+
+    return res.status(200).json({ message: `Monto de ${email} reseteado a 0` });
+  } catch (error) {
+    console.error("Error al resetear el monto:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+
+
 module.exports = {
   createUser,
   eliminarUsuario,
@@ -414,4 +449,5 @@ module.exports = {
   modificarUsuario,
   verUsuarios,
   obtenerMonto,
+  resetearMonto,
 };
