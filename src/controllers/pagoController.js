@@ -11,6 +11,7 @@ const crearPago = async (req, res) => {
     }
     const preference = new Preference(client);
     const { title, precio, idReserva } = req.body;
+    const precioNum = parseFloat(precio);
     const result = await preference.create({
       body: {
         items: [
@@ -18,7 +19,7 @@ const crearPago = async (req, res) => {
             title: title, // Título del producto
             quantity: 1, // Cantidad del producto
             currency_id: 'ARS', // Moneda en la que se realiza el pago
-            unit_price: precio, 
+            unit_price: precioNum, 
           }
         ],
         back_urls: {
