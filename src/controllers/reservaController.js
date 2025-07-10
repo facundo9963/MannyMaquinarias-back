@@ -352,7 +352,7 @@ const crearReservaEmpleado = async (req, res) => {
 };
 
 const eliminarReserva = async (req, res) => {
-  const reservaId = req.body.reservaId || req.query; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
+  const {reservaId} =  req.query; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
   const reserva = await Reserva.findByPk(reservaId);
   if (!reserva) {
     return res.status(404).json({ error: "Reserva no encontrada" });
