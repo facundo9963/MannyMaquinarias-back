@@ -201,18 +201,20 @@ const historialReservasUsuario = async (req, res) => {
 };
 
 const cancelarReserva = async (req, res) => {
-  const reservaId = req.body.reservaId || req.query.reservaId; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
+  const reservaId = req.body.reservaId || req.query.reservaId;
   const usuarioLogueado = req.usuarioLogueado;
 
   try {
     if (!reservaId) {
       return res.status(400).json({ error: "ID de reserva es obligatorio" });
     }
+
     if (isNaN(reservaId)) {
       return res
         .status(400)
         .json({ error: "ID de reserva debe ser un número" });
     }
+
     const reserva = await Reserva.findOne({
       where: {
         id: reservaId,
@@ -224,10 +226,20 @@ const cancelarReserva = async (req, res) => {
     if (!reserva) {
       return res.status(404).json({ error: "Reserva no encontrada" });
     }
+
+    // 🔒 Validar que la reserva aún no haya comenzado
+    const hoy = new Date().toISOString().split("T")[0]; // formato YYYY-MM-DD
+    if (reserva.fecha_inicio <= hoy) {
+      return res.status(400).json({
+        error: "No se puede cancelar una reserva que ya inició o está en curso",
+      });
+    }
+
     const maquina = await Maquina.findByPk(reserva.maquina_id);
     if (!maquina) {
       return res.status(404).json({ error: "Máquina no encontrada" });
     }
+
     const politicaCancelacion = await PoliticaCancelacion.findByPk(
       maquina.politica_cancelacion_id
     );
@@ -236,21 +248,26 @@ const cancelarReserva = async (req, res) => {
         .status(404)
         .json({ error: "Política de cancelación no encontrada" });
     }
+
     const porcentaje = politicaCancelacion.porcentajeRembolso;
     const precioReserva = reserva.precio;
+
     if (isNaN(porcentaje) || isNaN(precioReserva)) {
       return res
         .status(400)
         .json({ error: "Datos de política de cancelación inválidos" });
     }
+
     const usuario = await Usuario.findByPk(usuarioLogueado.id);
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
+
     const montoDevolver = parseFloat(usuario.monto);
     usuario.monto = montoDevolver + (porcentaje / 100.0) * precioReserva;
     await usuario.save();
-    reserva.precio = ((100.0 - porcentaje) / 100.0) * precioReserva; // Ajustar el precio de la reserva
+
+    reserva.precio = ((100.0 - porcentaje) / 100.0) * precioReserva; // Ajustar precio
     reserva.eliminado = true;
     await reserva.save();
 
@@ -352,7 +369,7 @@ const crearReservaEmpleado = async (req, res) => {
 };
 
 const eliminarReserva = async (req, res) => {
-  const {reservaId} =  req.query; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
+  const { reservaId } = req.query; // Asumiendo que el ID de la reserva se pasa como parámetro en la URL
   const reserva = await Reserva.findByPk(reservaId);
   if (!reserva) {
     return res.status(404).json({ error: "Reserva no encontrada" });
