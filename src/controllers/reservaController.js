@@ -112,6 +112,12 @@ const obtenerReservasPropias = async (req, res) => {
           as: "maquina",
           attributes: ["id", "nombre"], // Ajustar según tu modelo
         },
+        {
+          model: db.Resena, 
+          as: "resena", 
+          required: false, 
+          attributes: ["id", "puntuacion", "comentario"], 
+        },
       ],
     });
     if (reservas.length === 0) {

@@ -272,7 +272,7 @@ const modificarUsuario = async (req, res) => {
       const esValida = await bcrypt.compare(currentPassword, usuario.password);
       if (!esValida) {
         return res
-          .status(401)
+          .status(400)
           .json({ error: "Contraseña actual incorrecta." });
       }
 
