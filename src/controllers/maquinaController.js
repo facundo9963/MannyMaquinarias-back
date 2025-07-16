@@ -5,7 +5,9 @@ const {
   Mantenimiento,
   Sucursal,
   PoliticaCancelacion,
+  Usuario,
 } = require("../../db");
+
 
 const listarMaquinas = async (req, res) => {
   try {
@@ -393,48 +395,163 @@ const entregarMaquina = async (req, res) => {
 
 const recibirMaquina = async (req, res) => {
   try {
-    const { numeroReserva } = req.body || req.query;
+      const { maquina_id } = req.body; 
 
-    const reserva = await Reserva.findByPk(numeroReserva);
-    if (!reserva) {
-      return res.status(404).json({ error: "Reserva no encontrada" });
+      if (!maquina_id) {
+        return res.status(400).json({ error: "El ID de la máquina es requerido." });
+      }
+
+      const maquina = await Maquina.findByPk(maquina_id);
+      if (!maquina) {
+        return res.status(404).json({ error: "Máquina no encontrada." });
+      }
+
+      if (maquina.estado !== "entregado") {
+        return res.status(400).json({ error: "La máquina no fue entregada y no puede ser recibida." });
+      }
+
+      const reserva = await Reserva.findOne({
+        where: {
+          maquina_id: maquina_id,
+          fecha_inicio: { [Op.lte]: new Date() },
+          fecha_fin: { [Op.gte]: new Date(new Date().setDate(new Date().getDate() - 30)) }, 
+        },
+        order: [['fecha_fin', 'DESC']],
+      });
+
+      if (!reserva) {
+        return res.status(404).json({ error: "No se encontró una reserva activa para esta máquina. Imposible calcular atraso." });
+      }
+
+      const user = await Usuario.findByPk(reserva.usuario_id);
+      let montoAjustado = 0;
+
+      if (user) {
+        const fechaFinReserva = new Date(reserva.fecha_fin);
+        fechaFinReserva.setHours(0, 0, 0, 0); 
+        fechaFinReserva.setDate(fechaFinReserva.getDate() + 1); 
+
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0); 
+
+
+        const diffTime = hoy.getTime() - fechaFinReserva.getTime();
+
+        const diasAtrasoRaw = diffTime / (1000 * 60 * 60 * 24);
+        const diasAtraso = Math.ceil(Math.max(0, diasAtrasoRaw)); 
+        
+        if (diasAtraso > 0) {
+          const precioDiarioMaquina = parseFloat(maquina.precio);
+
+          if (isNaN(precioDiarioMaquina) || precioDiarioMaquina <= 0) {
+              return res.status(400).json({ error: "No se pudo calcular el monto de atraso: Precio diario de la máquina inválido." });
+          }
+
+          const precioPorDiaAtraso = precioDiarioMaquina; 
+
+          montoAjustado = precioPorDiaAtraso * diasAtraso;
+
+          user.monto = parseFloat(user.monto) - montoAjustado;
+          await user.save();
+
+          reserva.precio = parseFloat(reserva.precio) + montoAjustado;
+          await reserva.save();
+          console.log(`Precio de la reserva actualizado a: ${reserva.precio}`);
+
+        } else {
+          console.log('No hay atraso (diasAtraso es 0).');
+        }
+      } else {
+        console.warn(`Usuario con ID ${reserva.usuario_id} no encontrado para la reserva ${reserva.id}. No se pudo ajustar el monto.`);
+      }
+
+      await maquina.update({ estado: "disponible" });
+
+      return res.status(200).json({ message: "Máquina recibida correctamente", montoAjustado: montoAjustado });
+
+    } catch (error) {
+      console.error("Error al recibir la máquina:", error);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+}
+
+
+
+const cambiarEstadoMaquina = async (req, res) => {
+  try {
+    const maquinaId = req.params.id; 
+    const { nuevoEstado } = req.body; 
+
+    const estadoEnBackend = nuevoEstado ? nuevoEstado.toLowerCase() : null;
+
+    if (!estadoEnBackend) {
+      return res.status(400).json({ error: "El nuevo estado es requerido." });
     }
 
-    const maquina = await Maquina.findByPk(reserva.maquina_id);
+    const maquina = await Maquina.findByPk(maquinaId);
 
     if (!maquina) {
-      return res.status(404).json({ error: "Máquina no encontrada" });
+      return res.status(404).json({ error: "Máquina no encontrada." });
     }
 
-    // Verificar si la máquina ya está recibida
-    if (maquina.estado != "entregado") {
-      return res.status(400).json({ error: "La máquina no fue entregada" });
-    }
-    const user = await Usuario.findByPk(reserva.usuario_id);
-    //tiene que restarse el precio de la maquina por dia *2 al usuario por dia de atraso
-    const diasAtraso = Math.ceil(
-      (new Date() - new Date(reserva.fecha_fin)) / (1000 * 60 * 60 * 24)
-    );
-    if (diasAtraso > 0) {
-      const monto = parseFloat(user.monto); // Devolver el monto al usuario
-      const precioReserva = parseFloat(reserva.precio); // Precio de la reserva
-      const aPagar = precioReserva * diasAtraso;
-      user.monto = monto - aPagar; // Restar el monto al usuario
-      await user.save();
-      reserva.precio = precioReserva + aPagar; // Ajustar el precio de la reserva
-      await reserva.save();
+
+    if (estadoEnBackend === "entregado") {
+      if (maquina.estado !== "disponible") {
+        const reservaPendiente = await Reserva.findOne({
+          where: {
+            maquina_id: maquinaId,
+            fecha_inicio: { [Op.lte]: new Date() }, // Ya debió comenzar
+            eliminado: false,
+          },
+          order: [['fecha_inicio', 'ASC']]
+        });
+
+        if (reservaPendiente) {
+          const user = await Usuario.findByPk(reservaPendiente.usuario_id);
+          if (user) {
+            user.monto = parseFloat(user.monto) + parseFloat(reservaPendiente.precio); // Devolver monto
+            await user.save();
+          }
+          reservaPendiente.precio = 0;
+          reservaPendiente.eliminado = true;
+          await reservaPendiente.save();
+          return res.status(400).json({
+            error: "La máquina no está disponible para entrega. Se canceló la reserva y se devolvió el monto al usuario."
+          });
+        } else {
+          return res.status(400).json({ error: "La máquina no está disponible para entrega y no hay una reserva pendiente válida." });
+        }
+      }
+
+      const reservaParaEntregar = await Reserva.findOne({
+        where: {
+          maquina_id: maquinaId,
+          fecha_inicio: { [Op.lte]: new Date() },
+          eliminado: false,
+
+        },
+        order: [['fecha_inicio', 'ASC']]
+      });
+
+      if (!reservaParaEntregar) {
+        return res.status(404).json({ error: "No se encontró una reserva pendiente para entregar esta máquina." });
+      }
+
+    } else if (estadoEnBackend === "en_mantenimiento") {
+
+    } else if (estadoEnBackend === "disponible" && maquina.estado === "en_mantenimiento") {
+
     }
 
-    // Actualizar el estado de la máquina a "recibida"
-    await maquina.update({ estado: "disponible" });
+    await maquina.update({ estado: estadoEnBackend });
 
-    return res.status(200).json({ message: "Máquina recibida correctamente", monto: aPagar || 0 });
+    return res.status(200).json({ message: `Estado de la máquina actualizado a '${estadoEnBackend}' correctamente.` });
+
   } catch (error) {
-    console.error("Error al recibir la máquina:", error);
-    return res.status(500).json({ error: "Error interno del servidor" });
+    console.error("Error al cambiar el estado de la máquina:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
   }
 };
-
 
 module.exports = {
   listarMaquinas,
@@ -444,4 +561,5 @@ module.exports = {
   obtenerMaquinaPorSerie,
   recibirMaquina,
   entregarMaquina,
+  cambiarEstadoMaquina,
 };

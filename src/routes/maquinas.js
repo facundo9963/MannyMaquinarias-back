@@ -18,6 +18,8 @@ router.put("/update/:id", verificarToken, verificarAdmin, maquinasController.mod
 
 router.post("/recibir", verificarToken, verificarTrabajador, maquinasController.recibirMaquina);
 
-router.post("/entregar", verificarToken, verificarTrabajador, maquinasController.entregarMaquina);
+//router.post("/entregar", verificarToken, verificarTrabajador, maquinasController.entregarMaquina);
+
+router.put("/cambiar-estado/:id", verificarToken, verificarTrabajador, maquinasController.cambiarEstadoMaquina);
 
 module.exports = router;
