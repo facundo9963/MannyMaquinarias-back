@@ -373,6 +373,15 @@ module.exports = {
         usuario_id: usuarios[2].id,
         pagada: true,
       },
+      {
+        precio: 3600.0,
+        fecha_inicio: now,
+        fecha_fin: new Date(now.getTime() + 2 * oneDay),
+        fecha_reserva: new Date(now.getTime() - 2 * oneDay),
+        maquina_id: maquinas[2].id,
+        usuario_id: usuarios[3].id,
+        pagada: true,
+      },
     ]);
 
     // 9. Crear Mantenimientos
